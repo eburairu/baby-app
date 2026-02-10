@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}授乳記録 - Baby-App{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">授乳記録</h1>
+        <button
+            hx-get="/feedings/new"
+            hx-target="#form-container"
+            hx-swap="innerHTML"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+        >
+            + 新規追加
+        </button>
+    </div>
+
+    <!-- フォームコンテナ -->
+    <div id="form-container" class="mb-6"></div>
+
+    <!-- 記録一覧 -->
+    <div id="feeding-list" class="space-y-4">
+        {% for feeding in feedings %}
+            {% include "feeding/item.html" %}
+        {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
+                記録がありません。新規追加ボタンから記録を追加してください。
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

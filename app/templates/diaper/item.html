@@ -1,0 +1,37 @@
+<div id="diaper-{{ diaper.id }}" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <div class="flex justify-between items-start">
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg font-semibold">
+                    {{ diaper.change_time.strftime('%Y/%m/%d %H:%M') }}
+                </span>
+                <span class="px-2 py-1 rounded text-sm font-medium
+                    {% if diaper.diaper_type.value == 'wet' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                    {% elif diaper.diaper_type.value == 'dirty' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                    {% else %}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{% endif %}">
+                    {% if diaper.diaper_type.value == 'wet' %}💧 おしっこ
+                    {% elif diaper.diaper_type.value == 'dirty' %}💩 うんち
+                    {% else %}💧💩 両方{% endif %}
+                </span>
+            </div>
+
+            {% if diaper.notes %}
+                <div class="text-gray-600 dark:text-gray-400 mt-2">
+                    <p>メモ: {{ diaper.notes }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <button
+                hx-delete="/diapers/{{ diaper.id }}"
+                hx-confirm="この記録を削除しますか？"
+                hx-target="#diaper-{{ diaper.id }}"
+                hx-swap="outerHTML"
+                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+                削除
+            </button>
+        </div>
+    </div>
+</div>

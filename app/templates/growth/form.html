@@ -1,0 +1,105 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h3 class="text-xl font-semibold mb-4">
+        {% if growth %}成長記録を編集{% else %}新しい成長記録{% endif %}
+    </h3>
+
+    <form
+        hx-post="{% if growth %}/growths/{{ growth.id }}{% else %}/growths{% endif %}"
+        hx-target="#growth-list"
+        hx-swap="afterbegin"
+        class="space-y-4"
+    >
+        <div>
+            <label for="measurement_date" class="block text-sm font-medium mb-2">
+                測定日
+            </label>
+            <input
+                type="date"
+                id="measurement_date"
+                name="measurement_date"
+                value="{% if growth %}{{ growth.measurement_date.isoformat() }}{% else %}{{ now().strftime('%Y-%m-%d') }}{% endif %}"
+                required
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+            >
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label for="weight_kg" class="block text-sm font-medium mb-2">
+                    体重（kg）
+                </label>
+                <input
+                    type="number"
+                    id="weight_kg"
+                    name="weight_kg"
+                    value="{% if growth and growth.weight_kg %}{{ growth.weight_kg }}{% endif %}"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                    placeholder="任意"
+                >
+            </div>
+
+            <div>
+                <label for="height_cm" class="block text-sm font-medium mb-2">
+                    身長（cm）
+                </label>
+                <input
+                    type="number"
+                    id="height_cm"
+                    name="height_cm"
+                    value="{% if growth and growth.height_cm %}{{ growth.height_cm }}{% endif %}"
+                    step="0.1"
+                    min="0"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                    placeholder="任意"
+                >
+            </div>
+
+            <div>
+                <label for="head_circumference_cm" class="block text-sm font-medium mb-2">
+                    頭囲（cm）
+                </label>
+                <input
+                    type="number"
+                    id="head_circumference_cm"
+                    name="head_circumference_cm"
+                    value="{% if growth and growth.head_circumference_cm %}{{ growth.head_circumference_cm }}{% endif %}"
+                    step="0.1"
+                    min="0"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                    placeholder="任意"
+                >
+            </div>
+        </div>
+
+        <div>
+            <label for="notes" class="block text-sm font-medium mb-2">
+                メモ
+            </label>
+            <textarea
+                id="notes"
+                name="notes"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意"
+            >{% if growth and growth.notes %}{{ growth.notes }}{% endif %}</textarea>
+        </div>
+
+        <div class="flex gap-2">
+            <button
+                type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                {% if growth %}更新{% else %}追加{% endif %}
+            </button>
+            <button
+                type="button"
+                onclick="document.getElementById('form-container').innerHTML = ''"
+                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                キャンセル
+            </button>
+        </div>
+    </form>
+</div>

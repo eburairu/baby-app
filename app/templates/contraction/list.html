@@ -1,0 +1,36 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">陣痛記録（最新20件）</h2>
+
+    {% if contractions %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b dark:border-gray-700">
+                        <th class="text-left py-2 px-4">開始時刻</th>
+                        <th class="text-left py-2 px-4">持続時間</th>
+                        <th class="text-left py-2 px-4">間隔</th>
+                        <th class="text-left py-2 px-4">状態</th>
+                        <th class="text-left py-2 px-4">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contraction in contractions %}
+                        {% include "contraction/item.html" %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-gray-500 dark:text-gray-400 text-center py-8">
+            記録がありません。陣痛開始ボタンから記録を開始してください。
+        </p>
+    {% endif %}
+
+    <!-- 注意事項 -->
+    <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-500 rounded">
+        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+            <strong>⚠️ 注意:</strong> 陣痛の間隔が5-10分間隔、持続時間が30-60秒程度で規則的になってきたら、
+            病院に連絡することをお勧めします。この情報は参考用であり、医療的なアドバイスではありません。
+        </p>
+    </div>
+</div>

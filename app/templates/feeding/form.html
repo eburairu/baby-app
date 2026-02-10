@@ -1,0 +1,102 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h3 class="text-xl font-semibold mb-4">
+        {% if feeding %}授乳記録を編集{% else %}新しい授乳記録{% endif %}
+    </h3>
+
+    <form
+        hx-post="{% if feeding %}/feedings/{{ feeding.id }}{% else %}/feedings{% endif %}"
+        hx-target="#feeding-list"
+        hx-swap="afterbegin"
+        class="space-y-4"
+    >
+        <div>
+            <label for="feeding_time" class="block text-sm font-medium mb-2">
+                授乳時間
+            </label>
+            <input
+                type="datetime-local"
+                id="feeding_time"
+                name="feeding_time"
+                value="{% if feeding %}{{ feeding.feeding_time.strftime('%Y-%m-%dT%H:%M') }}{% else %}{{ now().strftime('%Y-%m-%dT%H:%M') }}{% endif %}"
+                required
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+            >
+        </div>
+
+        <div>
+            <label for="feeding_type" class="block text-sm font-medium mb-2">
+                種類
+            </label>
+            <select
+                id="feeding_type"
+                name="feeding_type"
+                required
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+            >
+                <option value="breast" {% if feeding and feeding.feeding_type.value == 'breast' %}selected{% endif %}>母乳</option>
+                <option value="bottle" {% if feeding and feeding.feeding_type.value == 'bottle' %}selected{% endif %}>ミルク</option>
+                <option value="mixed" {% if feeding and feeding.feeding_type.value == 'mixed' %}selected{% endif %}>混合</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="amount_ml" class="block text-sm font-medium mb-2">
+                量（ml）
+            </label>
+            <input
+                type="number"
+                id="amount_ml"
+                name="amount_ml"
+                value="{% if feeding and feeding.amount_ml %}{{ feeding.amount_ml }}{% endif %}"
+                step="0.1"
+                min="0"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意"
+            >
+        </div>
+
+        <div>
+            <label for="duration_minutes" class="block text-sm font-medium mb-2">
+                持続時間（分）
+            </label>
+            <input
+                type="number"
+                id="duration_minutes"
+                name="duration_minutes"
+                value="{% if feeding and feeding.duration_minutes %}{{ feeding.duration_minutes }}{% endif %}"
+                min="0"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意"
+            >
+        </div>
+
+        <div>
+            <label for="notes" class="block text-sm font-medium mb-2">
+                メモ
+            </label>
+            <textarea
+                id="notes"
+                name="notes"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意"
+            >{% if feeding and feeding.notes %}{{ feeding.notes }}{% endif %}</textarea>
+        </div>
+
+        <div class="flex gap-2">
+            <button
+                type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                {% if feeding %}更新{% else %}追加{% endif %}
+            </button>
+            <button
+                type="button"
+                onclick="document.getElementById('form-container').innerHTML = ''"
+                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                キャンセル
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}成長グラフ - Baby-App{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">成長グラフ</h1>
+        <a
+            href="/growths"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+        >
+            📋 一覧に戻る
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 体重グラフ -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4 text-blue-600 dark:text-blue-400">体重の推移</h3>
+            <div class="space-y-2">
+                {% for growth in growths %}
+                    {% if growth.weight_kg %}
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 w-24">
+                                {{ growth.measurement_date.strftime('%m/%d') }}
+                            </span>
+                            <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
+                                <div
+                                    class="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2"
+                                    style="width: {{ (growth.weight_kg / 15 * 100) | min(100) }}%"
+                                >
+                                    <span class="text-xs text-white font-semibold">{{ growth.weight_kg }} kg</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 身長グラフ -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">身長の推移</h3>
+            <div class="space-y-2">
+                {% for growth in growths %}
+                    {% if growth.height_cm %}
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 w-24">
+                                {{ growth.measurement_date.strftime('%m/%d') }}
+                            </span>
+                            <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
+                                <div
+                                    class="bg-green-600 h-6 rounded-full flex items-center justify-end pr-2"
+                                    style="width: {{ (growth.height_cm / 100 * 100) | min(100) }}%"
+                                >
+                                    <span class="text-xs text-white font-semibold">{{ growth.height_cm }} cm</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 頭囲グラフ -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">頭囲の推移</h3>
+            <div class="space-y-2">
+                {% for growth in growths %}
+                    {% if growth.head_circumference_cm %}
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 w-24">
+                                {{ growth.measurement_date.strftime('%m/%d') }}
+                            </span>
+                            <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
+                                <div
+                                    class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2"
+                                    style="width: {{ (growth.head_circumference_cm / 50 * 100) | min(100) }}%"
+                                >
+                                    <span class="text-xs text-white font-semibold">{{ growth.head_circumference_cm }} cm</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if not growths %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400 mt-6">
+            成長記録がありません。記録を追加するとグラフが表示されます。
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

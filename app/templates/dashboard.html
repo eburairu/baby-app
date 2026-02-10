@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}ダッシュボード - Baby-App{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">ダッシュボード</h1>
+
+    <!-- 統計カード（自動更新） -->
+    <div
+        id="stats-container"
+        hx-get="/dashboard/stats"
+        hx-trigger="every 30s"
+        hx-swap="innerHTML"
+    >
+        {% include "components/stats_card.html" %}
+    </div>
+
+    <!-- 最新記録 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <!-- 最新授乳記録 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">最新の授乳記録</h2>
+                <a href="/feedings" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">
+                    すべて見る →
+                </a>
+            </div>
+            <div class="space-y-3">
+                {% for feeding in recent_records.feedings[:5] %}
+                    <div class="border-l-4 border-blue-500 pl-3 py-2">
+                        <p class="text-sm font-medium">
+                            {{ feeding.feeding_time.strftime('%m/%d %H:%M') }}
+                        </p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {% if feeding.feeding_type.value == 'breast' %}母乳
+                            {% elif feeding.feeding_type.value == 'bottle' %}ミルク
+                            {% else %}混合{% endif %}
+                            {% if feeding.amount_ml %} - {{ feeding.amount_ml }}ml{% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">記録がありません</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 最新睡眠記録 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">最新の睡眠記録</h2>
+                <a href="/sleeps" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">
+                    すべて見る →
+                </a>
+            </div>
+            <div class="space-y-3">
+                {% for sleep in recent_records.sleeps[:5] %}
+                    <div class="border-l-4 border-green-500 pl-3 py-2">
+                        <p class="text-sm font-medium">
+                            {{ sleep.start_time.strftime('%m/%d %H:%M') }}
+                        </p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {% if sleep.is_ongoing %}
+                                継続中
+                            {% else %}
+                                {{ sleep.duration_minutes }}分
+                            {% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">記録がありません</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 最新おむつ交換記録 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">最新のおむつ交換</h2>
+                <a href="/diapers" class="text-blue-600 dark:text-blue-400 text-sm hover:underline">
+                    すべて見る →
+                </a>
+            </div>
+            <div class="space-y-3">
+                {% for diaper in recent_records.diapers[:5] %}
+                    <div class="border-l-4 border-yellow-500 pl-3 py-2">
+                        <p class="text-sm font-medium">
+                            {{ diaper.change_time.strftime('%m/%d %H:%M') }}
+                        </p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {% if diaper.diaper_type.value == 'wet' %}💧 おしっこ
+                            {% elif diaper.diaper_type.value == 'dirty' %}💩 うんち
+                            {% else %}💧💩 両方{% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">記録がありません</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- クイックアクションボタン -->
+    <div class="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-white mb-4">クイックアクション</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a
+                href="/feedings"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200"
+            >
+                <div class="text-4xl mb-2">🍼</div>
+                <div class="font-semibold">授乳記録</div>
+            </a>
+            <a
+                href="/sleeps"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200"
+            >
+                <div class="text-4xl mb-2">😴</div>
+                <div class="font-semibold">睡眠記録</div>
+            </a>
+            <a
+                href="/diapers"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200"
+            >
+                <div class="text-4xl mb-2">🍀</div>
+                <div class="font-semibold">おむつ交換</div>
+            </a>
+            <a
+                href="/contractions"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200"
+            >
+                <div class="text-4xl mb-2">⏱️</div>
+                <div class="font-semibold">陣痛タイマー</div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

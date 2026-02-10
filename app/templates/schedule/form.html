@@ -1,0 +1,68 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h3 class="text-xl font-semibold mb-4">新しいスケジュール</h3>
+
+    <form
+        hx-post="/schedules"
+        hx-target="#schedule-list"
+        hx-swap="afterbegin"
+        class="space-y-4"
+    >
+        <div>
+            <label for="title" class="block text-sm font-medium mb-2">
+                タイトル
+            </label>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                maxlength="200"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="例: 予防接種"
+            >
+        </div>
+
+        <div>
+            <label for="scheduled_time" class="block text-sm font-medium mb-2">
+                予定時刻
+            </label>
+            <input
+                type="datetime-local"
+                id="scheduled_time"
+                name="scheduled_time"
+                value="{{ now().strftime('%Y-%m-%dT%H:%M') }}"
+                required
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+            >
+        </div>
+
+        <div>
+            <label for="description" class="block text-sm font-medium mb-2">
+                説明
+            </label>
+            <textarea
+                id="description"
+                name="description"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意"
+            ></textarea>
+        </div>
+
+        <div class="flex gap-2">
+            <button
+                type="submit"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                追加
+            </button>
+            <button
+                type="button"
+                onclick="document.getElementById('form-container').innerHTML = ''"
+                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+                キャンセル
+            </button>
+        </div>
+    </form>
+</div>
