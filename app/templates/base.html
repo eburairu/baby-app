@@ -50,6 +50,19 @@
     <!-- トースト通知コンテナ -->
     <div id="toast-container" class="fixed bottom-20 md:bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
+    <!-- ローディングオーバーレイ (育児モード) -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="flex flex-col items-center">
+            <!-- 哺乳瓶アイコン -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20 text-blue-500 animate-baby-rocking mb-4 filter drop-shadow-lg">
+                <path d="M16.5 6h-1.5V4.5a1.5 1.5 0 0 0-3 0V6H10.5a1.5 1.5 0 0 0 0 3h6a1.5 1.5 0 0 0 0-3Z" opacity="0.5"/>
+                <path d="M9 10.5V20.25c0 1.243 1.007 2.25 2.25 2.25h4.5c1.243 0 2.25-1.007 2.25-2.25V10.5a.75.75 0 0 0-.75-.75H9.75a.75.75 0 0 0-.75.75Z" />
+                <path d="M12 2.25a.75.75 0 0 1 .75.75v1.5h-1.5V3a.75.75 0 0 1 .75-.75Z" />
+            </svg>
+            <span class="text-xl font-bold text-gray-600 dark:text-gray-300 tracking-wider">Loading...</span>
+        </div>
+    </div>
+
     <script>
         // ダークモード切り替え
         function toggleTheme() {
@@ -82,6 +95,63 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
+
+        // ローディングオーバーレイ制御
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // HTMX リクエスト開始
+        document.body.addEventListener('htmx:configRequest', function() {
+            loadingOverlay.classList.add('active');
+        });
+
+        // HTMX リクエスト完了 (成功/失敗問わず)
+        document.body.addEventListener('htmx:afterRequest', function() {
+            // 少し遅延させて、早すぎる点滅を防ぐ（オプション）
+            setTimeout(() => {
+                loadingOverlay.classList.remove('active');
+            }, 300);
+        });
+
+        // 通常のフォーム送信
+        document.addEventListener('submit', function(e) {
+            // HTMX経由のフォームは htmx:configRequest で処理されるので除外する必要があるが、
+            // HTMXが処理する場合 e.defaultPrevented が true になることが多い。
+            // あるいは、hx-boostなどでシームレスに処理される場合もある。
+            // ここでは、明示的に form 要素からの submit で、かつ htmx 属性がない、あるいは
+            // HTMXが処理しない場合を想定したいが、
+            // シンプルに「送信ボタンを押したら出す」で、HTMXの場合は二重に出ても問題ない（同じIDなので）。
+            // ただし、バリデーションエラーなどで送信がキャンセルされた場合は消す必要がある。
+            
+            // target="_blank" や download 属性がある場合は表示しない
+            if (e.target.target === '_blank' || e.target.hasAttribute('download')) {
+                return;
+            }
+
+            // 少し遅延させて表示（即時バリデーションエラーなどで一瞬出るのを防ぐ）
+            // setTimeout(() => {
+            //    if (!e.defaultPrevented) { // HTMXなどでキャンセルされていなければ
+            //        loadingOverlay.classList.add('active');
+            //    }
+            // }, 50);
+            
+            // 今回はシンプルに、即時表示させる（ユーザー体験優先）
+            // ただし、HTMXで処理される場合は重複処理になるが、class追加は冪等なのでOK。
+            // 問題は「HTMX以外で、ページ遷移を伴う送信」の場合、ページ遷移まで出しっぱなしでOK。
+            
+            // htmx属性がついていないフォームの場合のみここで発火させる手もあるが、
+            // 判定が複雑になるので、一旦すべてのsubmitで表示し、
+            // htmxの場合は afterRequest で消える、という挙動に任せる。
+            // 通常のPOST遷移なら、次のページが読み込まれるまで出しっぱなしで良い。
+            
+            loadingOverlay.classList.add('active');
+        });
+
+        // ページバック時のキャッシュ対策 (Safariなど)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                loadingOverlay.classList.remove('active');
+            }
+        });
 
         // htmx エラーハンドリング
         document.body.addEventListener('htmx:responseError', function(evt) {
