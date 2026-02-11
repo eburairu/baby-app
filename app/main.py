@@ -1,13 +1,13 @@
 """FastAPI アプリケーションエントリポイント"""
 from typing import Optional
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi.templating import Jinja2Templates
 
 from app.config import settings
 from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule
-from app.dependencies import get_current_user_optional
+from app.dependencies import get_current_user_optional, AuthenticationRequired
 from app.models.user import User
 
 # FastAPIアプリケーション作成
@@ -15,16 +15,25 @@ app = FastAPI(
     title="Baby-App",
     description="総合育児管理アプリケーション",
     version="1.0.0",
-    default_response_class=JSONResponse  # 明示的にJSONResponseを設定
+    default_response_class=JSONResponse,
 )
 
-# セッションミドルウェア追加
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=settings.SECRET_KEY,
-    session_cookie="session",
-    max_age=86400 * 7  # 7日間
-)
+templates = Jinja2Templates(directory="app/templates")
+
+
+# ===== エラーハンドラー =====
+
+@app.exception_handler(AuthenticationRequired)
+async def auth_required_handler(request: Request, exc: AuthenticationRequired):
+    """未認証時のハンドラー: ログインページへリダイレクト"""
+    # htmxリクエストの場合は HX-Redirect ヘッダーで対応
+    if request.headers.get("HX-Request"):
+        response = HTMLResponse(content="", status_code=200)
+        response.headers["HX-Redirect"] = "/login"
+        return response
+
+    return RedirectResponse(url="/login", status_code=303)
+
 
 # 静的ファイル
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

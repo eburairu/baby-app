@@ -1,36 +1,54 @@
 """依存性注入モジュール"""
+import secrets
+from datetime import datetime
 from typing import Optional
-from fastapi import Cookie, HTTPException, Depends
+from fastapi import Cookie, Depends, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
+from app.models.session import UserSession
 
-# セッションストア（本番環境ではRedisなど外部ストア推奨）
-sessions: dict[str, int] = {}
+
+class AuthenticationRequired(Exception):
+    """認証が必要な場合に発生する例外"""
+    pass
 
 
 async def get_current_user(
+    request: Request,
     session_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ) -> User:
-    """現在のログインユーザーを取得"""
-    if not session_token or session_token not in sessions:
-        raise HTTPException(
-            status_code=401,
-            detail="認証が必要です"
-        )
+    """現在のログインユーザーを取得（必須）
 
-    user_id = sessions[session_token]
-    user = db.query(User).filter(User.id == user_id).first()
+    未認証の場合は AuthenticationRequired を発生させる。
+    main.py のエラーハンドラーでログインページへリダイレクトする。
+    """
+    if not session_token:
+        raise AuthenticationRequired()
 
+    # DBからセッション検索
+    user_session = db.query(UserSession).filter(
+        UserSession.token == session_token
+    ).first()
+
+    if not user_session:
+        raise AuthenticationRequired()
+
+    # 有効期限チェック
+    if user_session.is_expired:
+        db.delete(user_session)
+        db.commit()
+        raise AuthenticationRequired()
+
+    # ユーザー取得
+    user = db.query(User).filter(User.id == user_session.user_id).first()
     if not user:
-        # セッションは存在するがユーザーが見つからない場合
-        del sessions[session_token]
-        raise HTTPException(
-            status_code=401,
-            detail="ユーザーが見つかりません"
-        )
+        db.delete(user_session)
+        db.commit()
+        raise AuthenticationRequired()
 
     return user
 
@@ -40,11 +58,14 @@ async def get_current_user_optional(
     db: Session = Depends(get_db)
 ) -> Optional[User]:
     """現在のログインユーザーを取得（オプショナル）"""
-    if not session_token or session_token not in sessions:
+    if not session_token:
         return None
 
-    user_id = sessions.get(session_token)
-    if not user_id:
+    user_session = db.query(UserSession).filter(
+        UserSession.token == session_token
+    ).first()
+
+    if not user_session or user_session.is_expired:
         return None
 
-    return db.query(User).filter(User.id == user_id).first()
+    return db.query(User).filter(User.id == user_session.user_id).first()
