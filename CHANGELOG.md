@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.3.0 (2026-02-11)
+
+### Features
+
+- Add baby-themed loading overlay
+  ([`79a48ca`](https://github.com/eburairu/baby-app/commit/79a48cac9abafac1670ebb1d5883abc55757ff6d))
+
+
 ## v1.2.0 (2026-02-11)
 
 
