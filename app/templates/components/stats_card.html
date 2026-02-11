@@ -1,6 +1,6 @@
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
     <!-- 授乳統計 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">直近7日間の授乳</p>
@@ -8,9 +8,9 @@
                     {{ feeding_stats.count }}回
                 </p>
                 {% if feeding_stats.avg_amount_ml > 0 %}
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        平均 {{ feeding_stats.avg_amount_ml }}ml
-                    </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    平均 {{ feeding_stats.avg_amount_ml }}ml
+                </p>
                 {% endif %}
             </div>
             <div class="text-5xl">🍼</div>
@@ -18,7 +18,7 @@
     </div>
 
     <!-- 睡眠統計 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">直近7日間の睡眠</p>
@@ -34,7 +34,7 @@
     </div>
 
     <!-- おむつ統計 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">直近7日間のおむつ</p>
@@ -50,21 +50,21 @@
     </div>
 
     <!-- 成長統計 -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">最新の測定</p>
                 {% if latest_growth %}
-                    <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                        {% if latest_growth.weight_kg %}{{ latest_growth.weight_kg }}kg{% else %}-{% endif %}
-                    </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {{ latest_growth.measurement_date.strftime('%m/%d') }}
-                    </p>
+                <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+                    {% if latest_growth.weight_kg %}{{ latest_growth.weight_kg }}kg{% else %}-{% endif %}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {{ latest_growth.measurement_date.strftime('%m/%d') }}
+                </p>
                 {% else %}
-                    <p class="text-xl text-gray-500 dark:text-gray-400 mt-2">
-                        記録なし
-                    </p>
+                <p class="text-xl text-gray-500 dark:text-gray-400 mt-2">
+                    記録なし
+                </p>
                 {% endif %}
             </div>
             <div class="text-5xl">📏</div>

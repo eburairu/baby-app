@@ -1,14 +1,11 @@
 /* カスタムスタイル */
 
-/* htmxインジケーター */
+/* ===== htmx インジケーター ===== */
 .htmx-indicator {
     display: none;
 }
 
-.htmx-request .htmx-indicator {
-    display: inline;
-}
-
+.htmx-request .htmx-indicator,
 .htmx-request.htmx-indicator {
     display: inline;
 }
@@ -24,38 +21,64 @@
     transition: opacity 200ms ease-in;
 }
 
-/* カスタムスクロールバー（ダークモード対応） */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+/* ===== ボトムナビバー (モバイル) ===== */
+.mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+/* ===== タッチ操作の最適化 ===== */
+@media (max-width: 767px) {
+    /* ボタン・リンクの最小タップサイズ */
+    button, a, select, input[type="submit"] {
+        min-height: 44px;
+    }
+
+    /* スクロールの挙動改善 */
+    html {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* フォーム要素のズーム防止 (16px以上でズームしない) */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
 }
 
-.dark ::-webkit-scrollbar-track {
-    background: #1f2937;
+/* ===== カスタムスクロールバー (PC向け) ===== */
+@media (min-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .dark ::-webkit-scrollbar-track {
+        background: #1f2937;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
 }
 
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-    background: #4b5563;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-}
-
-/* アニメーション */
+/* ===== アニメーション ===== */
 @keyframes pulse-slow {
     0%, 100% {
         opacity: 1;

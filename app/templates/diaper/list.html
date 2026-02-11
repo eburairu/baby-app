@@ -4,14 +4,10 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">おむつ交換記録</h1>
-        <button
-            hx-get="/diapers/new"
-            hx-target="#form-container"
-            hx-swap="innerHTML"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-        >
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 md:mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold">おむつ交換記録</h1>
+        <button hx-get="/diapers/new" hx-target="#form-container" hx-swap="innerHTML"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
             + 詳細入力
         </button>
     </div>
@@ -20,42 +16,24 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <h2 class="text-lg font-semibold mb-4">ワンタップ記録</h2>
         <div class="grid grid-cols-3 gap-4">
-            <form
-                hx-post="/diapers/quick"
-                hx-target="#diaper-list"
-                hx-swap="afterbegin"
-            >
+            <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
                 <input type="hidden" name="diaper_type" value="wet">
-                <button
-                    type="submit"
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200"
-                >
+                <button type="submit"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">
                     💧 おしっこ
                 </button>
             </form>
-            <form
-                hx-post="/diapers/quick"
-                hx-target="#diaper-list"
-                hx-swap="afterbegin"
-            >
+            <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
                 <input type="hidden" name="diaper_type" value="dirty">
-                <button
-                    type="submit"
-                    class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200"
-                >
+                <button type="submit"
+                    class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">
                     💩 うんち
                 </button>
             </form>
-            <form
-                hx-post="/diapers/quick"
-                hx-target="#diaper-list"
-                hx-swap="afterbegin"
-            >
+            <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
                 <input type="hidden" name="diaper_type" value="both">
-                <button
-                    type="submit"
-                    class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200"
-                >
+                <button type="submit"
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">
                     💧💩 両方
                 </button>
             </form>
@@ -68,11 +46,11 @@
     <!-- 記録一覧 -->
     <div id="diaper-list" class="space-y-4">
         {% for diaper in diapers %}
-            {% include "diaper/item.html" %}
+        {% include "diaper/item.html" %}
         {% else %}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
-                記録がありません。ワンタップボタンから記録を追加してください。
-            </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
+            記録がありません。ワンタップボタンから記録を追加してください。
+        </div>
         {% endfor %}
     </div>
 </div>

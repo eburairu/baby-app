@@ -4,45 +4,33 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">睡眠記録</h1>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 md:mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold">睡眠記録</h1>
         <div class="flex gap-2">
             {% if ongoing_sleep %}
-                <button
-                    hx-post="/sleeps/{{ ongoing_sleep.id }}/end"
-                    hx-target="body"
-                    hx-swap="innerHTML"
-                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 animate-pulse"
-                >
-                    ⏱️ 睡眠終了
-                </button>
+            <button hx-post="/sleeps/{{ ongoing_sleep.id }}/end" hx-target="body" hx-swap="innerHTML"
+                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 animate-pulse">
+                ⏱️ 睡眠終了
+            </button>
             {% else %}
-                <button
-                    hx-post="/sleeps/start"
-                    hx-target="body"
-                    hx-swap="innerHTML"
-                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
-                >
-                    😴 睡眠開始
-                </button>
+            <button hx-post="/sleeps/start" hx-target="body" hx-swap="innerHTML"
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200">
+                😴 睡眠開始
+            </button>
             {% endif %}
-            <button
-                hx-get="/sleeps/new"
-                hx-target="#form-container"
-                hx-swap="innerHTML"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-            >
+            <button hx-get="/sleeps/new" hx-target="#form-container" hx-swap="innerHTML"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
                 + 手動追加
             </button>
         </div>
     </div>
 
     {% if ongoing_sleep %}
-        <div class="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-500 p-4 mb-6">
-            <p class="font-semibold text-yellow-800 dark:text-yellow-200">
-                睡眠継続中: {{ ongoing_sleep.start_time.strftime('%Y/%m/%d %H:%M') }} から
-            </p>
-        </div>
+    <div class="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-500 p-4 mb-6">
+        <p class="font-semibold text-yellow-800 dark:text-yellow-200">
+            睡眠継続中: {{ ongoing_sleep.start_time.strftime('%Y/%m/%d %H:%M') }} から
+        </p>
+    </div>
     {% endif %}
 
     <!-- フォームコンテナ -->
@@ -51,11 +39,11 @@
     <!-- 記録一覧 -->
     <div id="sleep-list" class="space-y-4">
         {% for sleep in sleeps %}
-            {% include "sleep/item.html" %}
+        {% include "sleep/item.html" %}
         {% else %}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
-                記録がありません。睡眠開始ボタンから記録を開始してください。
-            </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
+            記録がありません。睡眠開始ボタンから記録を開始してください。
+        </div>
         {% endfor %}
     </div>
 </div>

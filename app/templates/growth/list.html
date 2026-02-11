@@ -4,21 +4,15 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">成長記録</h1>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 md:mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold">成長記録</h1>
         <div class="flex gap-2">
-            <a
-                href="/growths/chart"
-                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-            >
+            <a href="/growths/chart"
+                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
                 📊 グラフ表示
             </a>
-            <button
-                hx-get="/growths/new"
-                hx-target="#form-container"
-                hx-swap="innerHTML"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-            >
+            <button hx-get="/growths/new" hx-target="#form-container" hx-swap="innerHTML"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
                 + 新規追加
             </button>
         </div>
@@ -30,11 +24,11 @@
     <!-- 記録一覧 -->
     <div id="growth-list" class="space-y-4">
         {% for growth in growths %}
-            {% include "growth/item.html" %}
+        {% include "growth/item.html" %}
         {% else %}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
-                記録がありません。新規追加ボタンから記録を追加してください。
-            </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
+            記録がありません。新規追加ボタンから記録を追加してください。
+        </div>
         {% endfor %}
     </div>
 </div>
