@@ -29,18 +29,12 @@ from app.models import (  # noqa: F401
 # テスト用データベースURL
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 
-if TEST_DATABASE_URL:
-    # PostgreSQL使用時
-    _engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
-    _is_postgres = True
-else:
-    # デフォルト: SQLiteインメモリ
-    _engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-    )
-    _is_postgres = False
+if not TEST_DATABASE_URL:
+    # デフォルトでDocker ComposeのDBを指す（開発体験向上）
+    TEST_DATABASE_URL = "postgresql://test_user:test_password@localhost:5433/baby_app_test"
 
+# PostgreSQL接続
+_engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 _TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=_engine
 )
@@ -60,16 +54,12 @@ def db():
         yield session
     finally:
         session.close()
-        # テーブル削除（テスト間の分離）
-        if _is_postgres:
-            # PostgreSQLではCASCADEが必要
-            with _engine.connect() as conn:
-                conn.execute(text(
-                    "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-                ))
-                conn.commit()
-        else:
-            Base.metadata.drop_all(bind=_engine)
+        # テーブル削除（テスト間の分離 - PostgreSQL用）
+        with _engine.connect() as conn:
+            conn.execute(text(
+                "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+            ))
+            conn.commit()
 
 
 @pytest.fixture

@@ -60,10 +60,17 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. 環境変数設定:
+3. PostgreSQL起動:
+ローカルにPostgreSQLサーバーが必要です。Docker Composeを使う場合は以下:
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+※ ポート5433で起動しますが、`.env` の設定に合わせてください。
+
+4. 環境変数設定:
 ```bash
 cp .env.example .env
-# .envファイルを編集して適切な値を設定
+# .envファイルを編集してPostgreSQL接続情報を設定
 ```
 
 4. データベースマイグレーション:
@@ -80,27 +87,20 @@ uvicorn app.main:app --reload
 
 ### テスト実行
 
-#### SQLiteモード（デフォルト）
+テストはDocker Composeで起動したPostgreSQLコンテナ対して実行されます。
 
-環境変数を設定せずそのまま実行:
-
-```bash
-pytest tests/ -v
-```
-
-#### PostgreSQLモード
-
-1. テスト用PostgreSQLコンテナ起動:
+1. テスト用DB起動:
 ```bash
 docker compose -f docker-compose.test.yml up -d
 ```
 
 2. テスト実行:
 ```bash
-TEST_DATABASE_URL=postgresql://test_user:test_password@localhost:5433/baby_app_test pytest tests/ -v
+# conftest.py が自動的に localhost:5433 のDBを使用します
+pytest tests/ -v
 ```
 
-3. テスト終了後、コンテナ停止:
+3. 終了後、停止:
 ```bash
 docker compose -f docker-compose.test.yml down
 ```

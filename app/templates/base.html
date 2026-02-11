@@ -8,6 +8,19 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',   // blue-600
+                        secondary: '#16a34a', // green-600
+                    }
+                }
+            }
+        }
+    </script>
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
