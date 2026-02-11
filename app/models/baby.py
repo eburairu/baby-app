@@ -14,6 +14,7 @@ class Baby(Base):
     family_id = Column(Integer, ForeignKey("families.id"), nullable=False)
     name = Column(String, nullable=False)
     birthday = Column(Date, nullable=True)
+    due_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # リレーション

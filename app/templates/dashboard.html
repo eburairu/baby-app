@@ -52,6 +52,30 @@
         </span>
     </div>
 
+    <!-- プレママ専用エリア -->
+    {% if prenatal_info %}
+    <div class="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900 dark:to-purple-900 rounded-xl shadow-md p-6 mb-8 border border-pink-200 dark:border-pink-800">
+        <div class="text-center">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-pink-600 dark:text-pink-300 mb-2">
+                妊娠 {{ prenatal_info.weeks }}週 {{ prenatal_info.days }}日
+            </h2>
+            <p class="text-xl text-gray-700 dark:text-gray-300 mb-6">
+                出産予定日まであと <span class="text-4xl font-bold text-pink-500 dark:text-pink-200 mx-1">{{ prenatal_info.days_remaining }}</span> 日
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="/contractions" class="inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 transform hover:scale-105">
+                    <span class="text-2xl mr-2">⏱️</span> 陣痛タイマー
+                </a>
+                <a href="#" class="inline-flex justify-center items-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200">
+                    👶 生まれました！
+                </a>
+            </div>
+            <p class="text-xs text-gray-500 mt-4">「生まれました！」を押すと誕生日を設定できます（未実装リンク）</p>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- 統計カード（自動更新） -->
     <div class="relative">
         <div id="stats-container" hx-get="/dashboard/stats?baby_id={{ baby.id }}" hx-trigger="every 30s" hx-swap="innerHTML" hx-indicator="#stats-indicator">

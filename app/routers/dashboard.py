@@ -31,6 +31,23 @@ async def dashboard(
     latest_growth = StatisticsService.get_latest_growth(db, baby.id)
     recent_records = StatisticsService.get_recent_records(db, baby.id)
 
+    # プレママ期情報
+    prenatal_info = None
+    if baby and not baby.birthday and baby.due_date:
+        today = date.today()
+        days_remaining = (baby.due_date - today).days
+        
+        # 妊娠期間計算 (通常280日 = 40週)
+        elapsed_days = 280 - days_remaining
+        current_week = elapsed_days // 7
+        current_day = elapsed_days % 7
+        
+        prenatal_info = {
+            "days_remaining": days_remaining,
+            "weeks": current_week,
+            "days": current_day
+        }
+
     return templates.TemplateResponse(
         "dashboard.html",
         {
@@ -43,7 +60,8 @@ async def dashboard(
             "sleep_stats": sleep_stats,
             "diaper_stats": diaper_stats,
             "latest_growth": latest_growth,
-            "recent_records": recent_records
+            "recent_records": recent_records,
+            "prenatal_info": prenatal_info
         }
     )
 

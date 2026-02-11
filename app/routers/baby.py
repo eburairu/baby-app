@@ -30,6 +30,7 @@ async def new_baby_page(
 async def create_baby(
     name: str = Form(...),
     birthday: date = Form(None),
+    due_date: date = Form(None),
     db: Session = Depends(get_db),
     family = Depends(get_current_family),
     _ = Depends(admin_required)  # 管理者のみ可能
@@ -38,7 +39,8 @@ async def create_baby(
     baby = Baby(
         family_id=family.id,
         name=name,
-        birthday=birthday
+        birthday=birthday,
+        due_date=due_date
     )
     db.add(baby)
     db.commit()
