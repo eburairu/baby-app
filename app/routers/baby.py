@@ -63,3 +63,22 @@ async def create_baby(
     db.add(baby)
     db.commit()
     return RedirectResponse(url="/dashboard", status_code=303)
+
+
+@router.post("/{baby_id}/born")
+async def baby_born(
+    baby_id: int,
+    birthday: date = Form(...),
+    db: Session = Depends(get_db),
+    family = Depends(get_current_family),
+    _ = Depends(admin_required)
+):
+    """赤ちゃんが生まれたことを記録（誕生日設定）"""
+    baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
+    if not baby:
+        raise HTTPException(status_code=404, detail="Baby not found")
+    
+    baby.birthday = birthday
+    db.commit()
+    
+    return RedirectResponse(url="/dashboard", status_code=303)
