@@ -68,6 +68,7 @@ async def family_settings(
         "family/settings.html",
         {
             "request": request,
+            "user": user,
             "family": family,
             "is_admin": is_admin,
             "members": family.members
