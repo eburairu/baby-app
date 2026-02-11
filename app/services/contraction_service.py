@@ -42,6 +42,7 @@ class ContractionService:
         直近N時間の陣痛統計を計算
         """
         start_time = datetime.utcnow() - timedelta(hours=hours)
+        now = datetime.utcnow()
 
         # 期間内のすべての陣痛記録（進行中も含む）
         contractions = db.query(Contraction).filter(
@@ -58,19 +59,22 @@ class ContractionService:
                 "period_hours": hours
             }
 
-        # 完了した記録
-        completed_contractions = [c for c in contractions if c.end_time is not None]
+        # 持続時間の合計を計算（進行中も含む）
+        total_duration = 0
+        for c in contractions:
+            if c.end_time:
+                total_duration += c.duration_seconds or 0
+            else:
+                # 進行中の場合は現在時刻までの時間を加算
+                total_duration += int((now - c.start_time).total_seconds())
 
-        # 平均持続時間（完了したもののみ）
-        avg_duration = sum(
-            c.duration_seconds for c in completed_contractions if c.duration_seconds
-        ) / len(completed_contractions) if completed_contractions else 0
+        avg_duration = total_duration / len(contractions) if contractions else 0
 
         # 平均間隔（間隔データがある記録のみ）
-        intervals = [c.interval_seconds for c in contractions if c.interval_seconds]
+        intervals = [c.interval_seconds for c in contractions if c.interval_seconds is not None]
         avg_interval = sum(intervals) / len(intervals) if intervals else 0
 
-        # 最新の間隔（これは進行中のものでも、直近の「開始時」にセットされているはず）
+        # 最新の間隔
         last_interval = contractions[-1].interval_seconds if contractions else None
 
         return {
