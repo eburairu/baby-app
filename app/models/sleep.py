@@ -11,13 +11,15 @@ class Sleep(Base):
     __tablename__ = "sleeps"
 
     id = Column(Integer, primary_key=True, index=True)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     start_time = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     end_time = Column(DateTime, nullable=True)  # 継続中の場合はNull
     notes = Column(String, nullable=True)
 
     # リレーション
-    user = relationship("User", back_populates="sleeps")
+    baby = relationship("Baby", back_populates="sleeps")
+    user = relationship("User")
 
     @property
     def duration_minutes(self) -> int:

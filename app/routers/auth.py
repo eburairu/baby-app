@@ -6,7 +6,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from typing import Optional
 from app.models.user import User
+from app.models.family import Family
+from app.models.family_user import FamilyUser
 from app.models.session import UserSession, SESSION_MAX_AGE_DAYS
 from app.services.auth_service import AuthService
 from app.dependencies import get_current_user_optional
@@ -91,13 +94,14 @@ async def login(
 async def register_page(
     request: Request,
     user: User | None = Depends(get_current_user_optional),
+    code: Optional[str] = None,
 ):
-    """ユーザー登録ページ表示（ログイン済みならダッシュボードへ）"""
+    """ユーザー登録ページ表示"""
     if user:
         return RedirectResponse(url="/dashboard", status_code=303)
     return templates.TemplateResponse(
         "register.html",
-        {"request": request, "error": None},
+        {"request": request, "error": None, "invite_code": code},
     )
 
 
@@ -106,10 +110,31 @@ async def register(
     request: Request,
     username: str = Form(..., min_length=3, max_length=50),
     password: str = Form(..., min_length=6, max_length=72),
+    invite_code: str = Form(...),
+    honeypot: str = Form("", alias="email_confirm_hidden"),
     db: Session = Depends(get_db),
 ):
     """ユーザー登録処理"""
-    # ユーザー名の重複チェック
+    # 1. ハニーポットチェック
+    if honeypot:
+        return HTMLResponse(content="Bot detected", status_code=400)
+
+    # 2. 招待コード検証
+    is_valid_system_code = (invite_code == settings.SYSTEM_INVITE_CODE)
+    family = db.query(Family).filter(Family.invite_code == invite_code.upper()).first()
+
+    if not is_valid_system_code and not family:
+        return templates.TemplateResponse(
+            "register.html",
+            {
+                "request": request,
+                "error": "無効な招待コードです。管理者からコードを取得してください。",
+                "invite_code": invite_code
+            },
+            status_code=400,
+        )
+
+    # 3. ユーザー名の重複チェック
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         return templates.TemplateResponse(
@@ -121,14 +146,25 @@ async def register(
             status_code=400,
         )
 
-    # ユーザー作成
+    # 4. ユーザー作成
     hashed_password = AuthService.get_password_hash(password)
     new_user = User(username=username, hashed_password=hashed_password)
     db.add(new_user)
+    db.flush()
+
+    # 5. 家族招待コードの場合は自動参加
+    if family:
+        family_user = FamilyUser(
+            family_id=family.id,
+            user_id=new_user.id,
+            role="member"
+        )
+        db.add(family_user)
+
     db.commit()
     db.refresh(new_user)
 
-    # 自動ログイン
+    # 6. 自動ログイン
     token = _create_session(db, new_user.id)
 
     response = RedirectResponse(url="/dashboard", status_code=303)

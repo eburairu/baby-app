@@ -13,19 +13,19 @@ class StatisticsService:
     """統計計算ビジネスロジック"""
 
     @staticmethod
-    def get_feeding_stats(db: Session, user_id: int, days: int = 7) -> dict:
+    def get_feeding_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """授乳統計を取得"""
         start_date = datetime.utcnow() - timedelta(days=days)
 
         # 期間内の授乳回数
         feeding_count = db.query(func.count(Feeding.id)).filter(
-            Feeding.user_id == user_id,
+            Feeding.baby_id == baby_id,
             Feeding.feeding_time >= start_date
         ).scalar()
 
         # 期間内の平均授乳量（ミルクのみ）
         avg_amount = db.query(func.avg(Feeding.amount_ml)).filter(
-            Feeding.user_id == user_id,
+            Feeding.baby_id == baby_id,
             Feeding.feeding_time >= start_date,
             Feeding.amount_ml.isnot(None)
         ).scalar()
@@ -37,14 +37,14 @@ class StatisticsService:
         }
 
     @staticmethod
-    def get_sleep_stats(db: Session, user_id: int, days: int = 7) -> dict:
+    def get_sleep_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """睡眠統計を取得"""
         start_date = datetime.utcnow() - timedelta(days=days)
         now = datetime.utcnow()
 
         # 期間内のすべての睡眠記録
         sleeps = db.query(Sleep).filter(
-            Sleep.user_id == user_id,
+            Sleep.baby_id == baby_id,
             Sleep.start_time >= start_date
         ).all()
 
@@ -68,12 +68,12 @@ class StatisticsService:
         }
 
     @staticmethod
-    def get_diaper_stats(db: Session, user_id: int, days: int = 7) -> dict:
+    def get_diaper_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """おむつ交換統計を取得"""
         start_date = datetime.utcnow() - timedelta(days=days)
 
         diaper_count = db.query(func.count(Diaper.id)).filter(
-            Diaper.user_id == user_id,
+            Diaper.baby_id == baby_id,
             Diaper.change_time >= start_date
         ).scalar()
 
@@ -83,25 +83,25 @@ class StatisticsService:
         }
 
     @staticmethod
-    def get_latest_growth(db: Session, user_id: int) -> Growth:
+    def get_latest_growth(db: Session, baby_id: int) -> Growth:
         """最新の成長記録を取得"""
         return db.query(Growth).filter(
-            Growth.user_id == user_id
+            Growth.baby_id == baby_id
         ).order_by(Growth.measurement_date.desc()).first()
 
     @staticmethod
-    def get_recent_records(db: Session, user_id: int, limit: int = 10) -> dict:
+    def get_recent_records(db: Session, baby_id: int, limit: int = 10) -> dict:
         """最新記録を取得"""
         feedings = db.query(Feeding).filter(
-            Feeding.user_id == user_id
+            Feeding.baby_id == baby_id
         ).order_by(Feeding.feeding_time.desc()).limit(limit).all()
 
         sleeps = db.query(Sleep).filter(
-            Sleep.user_id == user_id
+            Sleep.baby_id == baby_id
         ).order_by(Sleep.start_time.desc()).limit(limit).all()
 
         diapers = db.query(Diaper).filter(
-            Diaper.user_id == user_id
+            Diaper.baby_id == baby_id
         ).order_by(Diaper.change_time.desc()).limit(limit).all()
 
         return {

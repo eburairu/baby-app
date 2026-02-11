@@ -2,14 +2,14 @@
 
 ## 機能概要
 - 陣痛の開始と終了を記録し、持続時間と間隔を自動計算する。
-- 直近 1 時間の統計を表示し、病院へ連絡する目安とする。
+- 家族（パートナーなど）がリアルタイムで状況を共有・閲覧可能。
 
-## ロジック (`ContractionService`)
-- **持続時間 (Duration)**: `end_time - start_time`
-- **間隔 (Interval)**: `現在の start_time - 前回の end_time`
-- **統計 (Statistics)**: 直近 1 時間の平均持続時間と平均間隔。
+## データモデル
+- `baby_id`: 対象の赤ちゃん ID (必須)
+- `user_id`: 記録したユーザー ID (必須)
+- `start_time`: 開始時刻
+- `end_time`: 終了時刻
+- ...（既存ロジック通り）
 
-## 操作
-- **開始**: `POST /contractions/start`
-- **終了**: `POST /contractions/{id}/end`
-- **削除**: `DELETE /contractions/{id}`
+## 統計
+- 家族メンバー全員の画面で最新の統計が共有される。

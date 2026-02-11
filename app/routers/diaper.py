@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.diaper import Diaper, DiaperType
 from app.schemas.diaper import DiaperCreate
 
@@ -19,16 +20,17 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_diapers(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """おむつ交換記録一覧ページ"""
     diapers = db.query(Diaper).filter(
-        Diaper.user_id == user.id
+        Diaper.baby_id == baby.id
     ).order_by(Diaper.change_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
         "diaper/list.html",
-        {"request": request, "user": user, "diapers": diapers}
+        {"request": request, "user": user, "baby": baby, "diapers": diapers}
     )
 
 
@@ -37,10 +39,12 @@ async def quick_diaper(
     request: Request,
     diaper_type: str = Form(...),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """ワンタップでおむつ交換記録"""
     new_diaper = Diaper(
+        baby_id=baby.id,
         user_id=user.id,
         change_time=datetime.utcnow(),
         diaper_type=DiaperType(diaper_type)
@@ -57,19 +61,20 @@ async def quick_diaper(
         )
 
     diapers = db.query(Diaper).filter(
-        Diaper.user_id == user.id
+        Diaper.baby_id == baby.id
     ).order_by(Diaper.change_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
         "diaper/list.html",
-        {"request": request, "user": user, "diapers": diapers}
+        {"request": request, "user": user, "baby": baby, "diapers": diapers}
     )
 
 
 @router.get("/new", response_class=HTMLResponse)
 async def new_diaper_form(
     request: Request,
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """新規おむつ交換記録フォーム"""
     return templates.TemplateResponse(
@@ -77,6 +82,7 @@ async def new_diaper_form(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "diaper": None,
             "diaper_types": DiaperType
         }
@@ -88,10 +94,12 @@ async def create_diaper(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: DiaperCreate = Depends(DiaperCreate.as_form)
 ):
     """おむつ交換記録作成"""
     new_diaper = Diaper(
+        baby_id=baby.id,
         user_id=user.id,
         **form_data.model_dump()
     )
@@ -107,12 +115,12 @@ async def create_diaper(
         )
 
     diapers = db.query(Diaper).filter(
-        Diaper.user_id == user.id
+        Diaper.baby_id == baby.id
     ).order_by(Diaper.change_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
         "diaper/list.html",
-        {"request": request, "user": user, "diapers": diapers}
+        {"request": request, "user": user, "baby": baby, "diapers": diapers}
     )
 
 
@@ -120,12 +128,13 @@ async def create_diaper(
 async def delete_diaper(
     diaper_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """おむつ交換記録削除"""
     diaper = db.query(Diaper).filter(
         Diaper.id == diaper_id,
-        Diaper.user_id == user.id
+        Diaper.baby_id == baby.id
     ).first()
 
     if not diaper:

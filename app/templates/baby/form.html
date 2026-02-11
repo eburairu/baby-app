@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}赤ちゃん登録 - Baby-App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-primary">赤ちゃんの登録</h2>
+    
+    <form action="/babies/create" method="post">
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="name">
+                名前
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="name" name="name" type="text" placeholder="赤ちゃんのお名前" required>
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="birthday">
+                誕生日
+            </label>
+            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                   id="birthday" name="birthday" type="date">
+        </div>
+        <div class="flex items-center justify-between">
+            <button class="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                登録する
+            </button>
+            <a href="/dashboard" class="text-sm text-gray-600 hover:underline">キャンセル</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

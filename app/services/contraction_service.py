@@ -11,13 +11,13 @@ class ContractionService:
     """陣痛タイマー関連のビジネスロジック"""
 
     @staticmethod
-    def calculate_interval(db: Session, user_id: int) -> Optional[int]:
+    def calculate_interval(db: Session, baby_id: int) -> Optional[int]:
         """
         前回の陣痛終了時刻から今回の開始時刻までの間隔を計算（秒）
         """
         # 最新の完了した陣痛記録を取得
         last_contraction = db.query(Contraction).filter(
-            Contraction.user_id == user_id,
+            Contraction.baby_id == baby_id,
             Contraction.end_time.isnot(None)
         ).order_by(Contraction.start_time.desc()).first()
 
@@ -37,7 +37,7 @@ class ContractionService:
         return int(duration)
 
     @staticmethod
-    def get_statistics(db: Session, user_id: int, hours: int = 1) -> Dict:
+    def get_statistics(db: Session, baby_id: int, hours: int = 1) -> Dict:
         """
         直近N時間の陣痛統計を計算
         """
@@ -45,7 +45,7 @@ class ContractionService:
 
         # 期間内のすべての陣痛記録（進行中も含む）
         contractions = db.query(Contraction).filter(
-            Contraction.user_id == user_id,
+            Contraction.baby_id == baby_id,
             Contraction.start_time >= start_time
         ).all()
 

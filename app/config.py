@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     """アプリケーション設定"""
     DATABASE_URL: str
     SECRET_KEY: str
+    SYSTEM_INVITE_CODE: str = "BABY-PRO-2026"  # デフォルト値
     ENVIRONMENT: str = "development"
 
     class Config:

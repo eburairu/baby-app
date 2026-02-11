@@ -16,9 +16,5 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # リレーション
-    feedings = relationship("Feeding", back_populates="user", cascade="all, delete-orphan")
-    sleeps = relationship("Sleep", back_populates="user", cascade="all, delete-orphan")
-    diapers = relationship("Diaper", back_populates="user", cascade="all, delete-orphan")
-    growths = relationship("Growth", back_populates="user", cascade="all, delete-orphan")
-    schedules = relationship("Schedule", back_populates="user", cascade="all, delete-orphan")
-    contractions = relationship("Contraction", back_populates="user", cascade="all, delete-orphan")
+    families = relationship("FamilyUser", back_populates="user", cascade="all, delete-orphan")
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")

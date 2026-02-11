@@ -19,10 +19,12 @@ class Diaper(Base):
     __tablename__ = "diapers"
 
     id = Column(Integer, primary_key=True, index=True)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     change_time = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     diaper_type = Column(SQLEnum(DiaperType), nullable=False)
     notes = Column(String, nullable=True)
 
     # リレーション
-    user = relationship("User", back_populates="diapers")
+    baby = relationship("Baby", back_populates="diapers")
+    user = relationship("User")

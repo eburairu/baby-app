@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.contraction import Contraction
 from app.services.contraction_service import ContractionService
 
@@ -19,28 +20,30 @@ templates = Jinja2Templates(directory="app/templates")
 async def contraction_timer(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """陣痛タイマーページ"""
     # 継続中の陣痛を取得
     ongoing_contraction = db.query(Contraction).filter(
-        Contraction.user_id == user.id,
+        Contraction.baby_id == baby.id,
         Contraction.end_time == None
     ).first()
 
     # 陣痛記録一覧（最新20件）
     contractions = db.query(Contraction).filter(
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).order_by(Contraction.start_time.desc()).limit(20).all()
 
     # 直近1時間の統計
-    stats = ContractionService.get_statistics(db, user.id, hours=1)
+    stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
     return templates.TemplateResponse(
         "contraction/timer.html",
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "ongoing_contraction": ongoing_contraction,
             "contractions": contractions,
             "stats": stats
@@ -52,12 +55,13 @@ async def contraction_timer(
 async def start_contraction(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """陣痛開始"""
     # 既に継続中の陣痛があるかチェック
     ongoing = db.query(Contraction).filter(
-        Contraction.user_id == user.id,
+        Contraction.baby_id == baby.id,
         Contraction.end_time == None
     ).first()
 
@@ -68,10 +72,11 @@ async def start_contraction(
         )
 
     # 前回からの間隔を計算
-    interval_seconds = ContractionService.calculate_interval(db, user.id)
+    interval_seconds = ContractionService.calculate_interval(db, baby.id)
 
     # 新しい陣痛記録を作成
     new_contraction = Contraction(
+        baby_id=baby.id,
         user_id=user.id,
         start_time=datetime.utcnow(),
         interval_seconds=interval_seconds
@@ -83,16 +88,17 @@ async def start_contraction(
 
     # ページ全体を再レンダリング
     contractions = db.query(Contraction).filter(
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).order_by(Contraction.start_time.desc()).limit(20).all()
 
-    stats = ContractionService.get_statistics(db, user.id, hours=1)
+    stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
     return templates.TemplateResponse(
         "contraction/timer.html",
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "ongoing_contraction": new_contraction,
             "contractions": contractions,
             "stats": stats
@@ -105,12 +111,13 @@ async def end_contraction(
     request: Request,
     contraction_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """陣痛終了"""
     contraction = db.query(Contraction).filter(
         Contraction.id == contraction_id,
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).first()
 
     if not contraction:
@@ -135,16 +142,17 @@ async def end_contraction(
 
     # ページ全体を再レンダリング
     contractions = db.query(Contraction).filter(
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).order_by(Contraction.start_time.desc()).limit(20).all()
 
-    stats = ContractionService.get_statistics(db, user.id, hours=1)
+    stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
     return templates.TemplateResponse(
         "contraction/timer.html",
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "ongoing_contraction": None,
             "contractions": contractions,
             "stats": stats
@@ -156,19 +164,21 @@ async def end_contraction(
 async def contraction_list(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """陣痛記録一覧（htmx自動更新用）"""
     contractions = db.query(Contraction).filter(
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).order_by(Contraction.start_time.desc()).limit(20).all()
 
-    stats = ContractionService.get_statistics(db, user.id, hours=1)
+    stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
     return templates.TemplateResponse(
         "contraction/list.html",
         {
             "request": request,
+            "baby": baby,
             "contractions": contractions,
             "stats": stats
         }
@@ -179,12 +189,13 @@ async def contraction_list(
 async def delete_contraction(
     contraction_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """陣痛記録削除"""
     contraction = db.query(Contraction).filter(
         Contraction.id == contraction_id,
-        Contraction.user_id == user.id
+        Contraction.baby_id == baby.id
     ).first()
 
     if not contraction:

@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.sleep import Sleep
 from app.schemas.sleep import SleepCreate
 
@@ -19,16 +20,17 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_sleeps(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """睡眠記録一覧ページ"""
     sleeps = db.query(Sleep).filter(
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).order_by(Sleep.start_time.desc()).limit(50).all()
 
     # 継続中の睡眠を取得
     ongoing_sleep = db.query(Sleep).filter(
-        Sleep.user_id == user.id,
+        Sleep.baby_id == baby.id,
         Sleep.end_time == None
     ).first()
 
@@ -37,6 +39,7 @@ async def list_sleeps(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "sleeps": sleeps,
             "ongoing_sleep": ongoing_sleep
         }
@@ -47,12 +50,13 @@ async def list_sleeps(
 async def start_sleep(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """睡眠開始"""
     # 既に継続中の睡眠があるかチェック
     ongoing_sleep = db.query(Sleep).filter(
-        Sleep.user_id == user.id,
+        Sleep.baby_id == baby.id,
         Sleep.end_time == None
     ).first()
 
@@ -64,6 +68,7 @@ async def start_sleep(
 
     # 新しい睡眠記録を作成
     new_sleep = Sleep(
+        baby_id=baby.id,
         user_id=user.id,
         start_time=datetime.utcnow()
     )
@@ -72,9 +77,9 @@ async def start_sleep(
     db.commit()
     db.refresh(new_sleep)
 
-    # 一覧ページにリダイレクト（htmxの場合は部分更新）
+    # 一覧ページの内容を返す
     sleeps = db.query(Sleep).filter(
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).order_by(Sleep.start_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
@@ -82,6 +87,7 @@ async def start_sleep(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "sleeps": sleeps,
             "ongoing_sleep": new_sleep
         }
@@ -93,12 +99,13 @@ async def end_sleep(
     request: Request,
     sleep_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """睡眠終了"""
     sleep = db.query(Sleep).filter(
         Sleep.id == sleep_id,
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).first()
 
     if not sleep:
@@ -114,9 +121,9 @@ async def end_sleep(
     db.commit()
     db.refresh(sleep)
 
-    # 一覧ページにリダイレクト
+    # 一覧ページの内容を返す
     sleeps = db.query(Sleep).filter(
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).order_by(Sleep.start_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
@@ -124,21 +131,10 @@ async def end_sleep(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "sleeps": sleeps,
             "ongoing_sleep": None
         }
-    )
-
-
-@router.get("/new", response_class=HTMLResponse)
-async def new_sleep_form(
-    request: Request,
-    user: User = Depends(get_current_user)
-):
-    """新規睡眠記録フォーム（手動入力）"""
-    return templates.TemplateResponse(
-        "sleep/form.html",
-        {"request": request, "user": user, "sleep": None}
     )
 
 
@@ -147,10 +143,12 @@ async def create_sleep(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: SleepCreate = Depends(SleepCreate.as_form)
 ):
     """睡眠記録作成（手動入力）"""
     new_sleep = Sleep(
+        baby_id=baby.id,
         user_id=user.id,
         **form_data.model_dump()
     )
@@ -166,11 +164,11 @@ async def create_sleep(
         )
 
     sleeps = db.query(Sleep).filter(
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).order_by(Sleep.start_time.desc()).limit(50).all()
 
     ongoing_sleep = db.query(Sleep).filter(
-        Sleep.user_id == user.id,
+        Sleep.baby_id == baby.id,
         Sleep.end_time == None
     ).first()
 
@@ -179,6 +177,7 @@ async def create_sleep(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "sleeps": sleeps,
             "ongoing_sleep": ongoing_sleep
         }
@@ -189,12 +188,13 @@ async def create_sleep(
 async def delete_sleep(
     sleep_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """睡眠記録削除"""
     sleep = db.query(Sleep).filter(
         Sleep.id == sleep_id,
-        Sleep.user_id == user.id
+        Sleep.baby_id == baby.id
     ).first()
 
     if not sleep:

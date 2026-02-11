@@ -11,6 +11,7 @@ class Growth(Base):
     __tablename__ = "growths"
 
     id = Column(Integer, primary_key=True, index=True)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     measurement_date = Column(Date, nullable=False, index=True)
     weight_kg = Column(Float, nullable=True)  # 体重（kg）
@@ -19,4 +20,5 @@ class Growth(Base):
     notes = Column(String, nullable=True)
 
     # リレーション
-    user = relationship("User", back_populates="growths")
+    baby = relationship("Baby", back_populates="growths")
+    user = relationship("User")

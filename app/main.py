@@ -7,8 +7,8 @@ from fastapi.templating import Jinja2Templates
 
 from fastapi.exceptions import RequestValidationError
 from app.config import settings
-from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule
-from app.dependencies import get_current_user_optional, AuthenticationRequired
+from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule, family, baby
+from app.dependencies import get_current_user_optional, AuthenticationRequired, PermissionDenied
 from app.models.user import User
 
 # FastAPIアプリケーション作成
@@ -23,6 +23,23 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 # ===== エラーハンドラー =====
+
+@app.exception_handler(PermissionDenied)
+async def permission_denied_handler(request: Request, exc: PermissionDenied):
+    """権限不足時のハンドラー"""
+    msg = str(exc)
+    if request.headers.get("HX-Request"):
+        response = HTMLResponse(content="", status_code=200)
+        if "家族に所属していません" in msg:
+            response.headers["HX-Redirect"] = "/families/setup"
+        else:
+            response.headers["HX-Redirect"] = "/dashboard"
+        return response
+
+    if "家族に所属していません" in msg:
+        return RedirectResponse(url="/families/setup", status_code=303)
+    return RedirectResponse(url="/dashboard", status_code=303)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -58,6 +75,8 @@ async def auth_required_handler(request: Request, exc: AuthenticationRequired):
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # ルーター登録
+app.include_router(family.router)
+app.include_router(baby.router)
 app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(feeding.router)

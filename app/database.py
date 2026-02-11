@@ -6,10 +6,15 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
 # データベースエンジン作成
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_pre_ping=True,  # 接続の健全性チェック
-    echo=settings.ENVIRONMENT == "development"  # 開発環境でSQLログ出力
+    pool_pre_ping=True,
+    echo=settings.ENVIRONMENT == "development",
+    connect_args=connect_args
 )
 
 # セッションファクトリ

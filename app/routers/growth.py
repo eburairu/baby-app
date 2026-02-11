@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.growth import Growth
 from app.schemas.growth import GrowthCreate
 
@@ -19,16 +20,17 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_growths(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """成長記録一覧ページ"""
     growths = db.query(Growth).filter(
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).order_by(Growth.measurement_date.desc()).all()
 
     return templates.TemplateResponse(
         "growth/list.html",
-        {"request": request, "user": user, "growths": growths}
+        {"request": request, "user": user, "baby": baby, "growths": growths}
     )
 
 
@@ -36,28 +38,30 @@ async def list_growths(
 async def growth_chart(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """成長グラフページ"""
     growths = db.query(Growth).filter(
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).order_by(Growth.measurement_date.asc()).all()
 
     return templates.TemplateResponse(
         "growth/chart.html",
-        {"request": request, "user": user, "growths": growths}
+        {"request": request, "user": user, "baby": baby, "growths": growths}
     )
 
 
 @router.get("/new", response_class=HTMLResponse)
 async def new_growth_form(
     request: Request,
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """新規成長記録フォーム"""
     return templates.TemplateResponse(
         "growth/form.html",
-        {"request": request, "user": user, "growth": None}
+        {"request": request, "user": user, "baby": baby, "growth": None}
     )
 
 
@@ -66,10 +70,12 @@ async def create_growth(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: GrowthCreate = Depends(GrowthCreate.as_form)
 ):
     """成長記録作成"""
     new_growth = Growth(
+        baby_id=baby.id,
         user_id=user.id,
         **form_data.model_dump()
     )
@@ -85,12 +91,12 @@ async def create_growth(
         )
 
     growths = db.query(Growth).filter(
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).order_by(Growth.measurement_date.desc()).all()
 
     return templates.TemplateResponse(
         "growth/list.html",
-        {"request": request, "user": user, "growths": growths}
+        {"request": request, "user": user, "baby": baby, "growths": growths}
     )
 
 
@@ -99,12 +105,13 @@ async def edit_growth_form(
     request: Request,
     growth_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """成長記録編集フォーム"""
     growth = db.query(Growth).filter(
         Growth.id == growth_id,
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).first()
 
     if not growth:
@@ -112,7 +119,7 @@ async def edit_growth_form(
 
     return templates.TemplateResponse(
         "growth/form.html",
-        {"request": request, "user": user, "growth": growth}
+        {"request": request, "user": user, "baby": baby, "growth": growth}
     )
 
 
@@ -122,12 +129,13 @@ async def update_growth(
     growth_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: GrowthCreate = Depends(GrowthCreate.as_form)
 ):
     """成長記録更新"""
     growth = db.query(Growth).filter(
         Growth.id == growth_id,
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).first()
 
     if not growth:
@@ -148,12 +156,12 @@ async def update_growth(
         )
 
     growths = db.query(Growth).filter(
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).order_by(Growth.measurement_date.desc()).all()
 
     return templates.TemplateResponse(
         "growth/list.html",
-        {"request": request, "user": user, "growths": growths}
+        {"request": request, "user": user, "baby": baby, "growths": growths}
     )
 
 
@@ -161,12 +169,13 @@ async def update_growth(
 async def delete_growth(
     growth_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """成長記録削除"""
     growth = db.query(Growth).filter(
         Growth.id == growth_id,
-        Growth.user_id == user.id
+        Growth.baby_id == baby.id
     ).first()
 
     if not growth:

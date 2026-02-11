@@ -11,6 +11,7 @@ class Schedule(Base):
     __tablename__ = "schedules"
 
     id = Column(Integer, primary_key=True, index=True)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -19,4 +20,5 @@ class Schedule(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # リレーション
-    user = relationship("User", back_populates="schedules")
+    baby = relationship("Baby", back_populates="schedules")
+    user = relationship("User")

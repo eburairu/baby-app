@@ -38,6 +38,19 @@
                     placeholder="6〜72文字">
             </div>
 
+            <div>
+                <label for="invite_code" class="block text-sm font-medium mb-2">
+                    招待コード
+                </label>
+                <input type="text" id="invite_code" name="invite_code" required value="{{ invite_code or '' }}"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                    placeholder="システム管理コードまたは家族招待コード">
+            </div>
+
+            <div class="hidden">
+                <input type="text" name="email_confirm_hidden" tabindex="-1" autocomplete="off">
+            </div>
+
             <button type="submit"
                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
                 登録

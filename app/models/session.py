@@ -20,7 +20,7 @@ class UserSession(Base):
     expires_at = Column(DateTime, nullable=False)
 
     # リレーション
-    user = relationship("User", backref="sessions")
+    user = relationship("User", back_populates="sessions")
 
     @property
     def is_expired(self) -> bool:

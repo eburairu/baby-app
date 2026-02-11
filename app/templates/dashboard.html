@@ -4,11 +4,57 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto">
-    <h1 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6">ダッシュボード</h1>
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold">ダッシュボード</h1>
+            <p class="text-gray-600 dark:text-gray-400">{{ family.name }} の記録</p>
+        </div>
+        
+        {% if all_babies %}
+        <div class="flex items-center gap-2">
+            <label for="baby-selector" class="text-sm font-medium">表示対象:</label>
+            <select id="baby-selector" name="baby_id" 
+                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500"
+                    onchange="location.href='/dashboard?baby_id=' + this.value">
+                {% for b in all_babies %}
+                <option value="{{ b.id }}" {% if b.id == baby.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+            {% if user.families[0].role == 'admin' %}
+            <a href="/babies/new" class="text-blue-600 hover:text-blue-700 p-1" title="赤ちゃんを追加">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            </a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        赤ちゃんが登録されていません。
+                        <a href="/babies/new" class="font-medium underline hover:text-yellow-600">ここから登録してください。</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if baby %}
+    <div class="mb-4">
+        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            🍼 {{ baby.name }} の記録を表示中
+        </span>
+    </div>
 
     <!-- 統計カード（自動更新） -->
     <div class="relative">
-        <div id="stats-container" hx-get="/dashboard/stats" hx-trigger="every 30s" hx-swap="innerHTML" hx-indicator="#stats-indicator">
+        <div id="stats-container" hx-get="/dashboard/stats?baby_id={{ baby.id }}" hx-trigger="every 30s" hx-swap="innerHTML" hx-indicator="#stats-indicator">
             {% include "components/stats_card.html" %}
         </div>
         <div id="stats-indicator" class="htmx-indicator absolute top-0 right-0 p-2">
@@ -124,7 +170,9 @@
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">⏱️</div>
                 <div class="font-semibold">陣痛タイマー</div>
             </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
-    </div>
-</div>
-{% endblock %}
+        {% endblock %}
+        

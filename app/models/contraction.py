@@ -11,6 +11,7 @@ class Contraction(Base):
     __tablename__ = "contractions"
 
     id = Column(Integer, primary_key=True, index=True)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     start_time = Column(DateTime, nullable=False, index=True)
     end_time = Column(DateTime, nullable=True)  # 継続中の場合はNull
@@ -19,7 +20,8 @@ class Contraction(Base):
     notes = Column(String, nullable=True)
 
     # リレーション
-    user = relationship("User", back_populates="contractions")
+    baby = relationship("Baby", back_populates="contractions")
+    user = relationship("User")
 
     @property
     def is_ongoing(self) -> bool:

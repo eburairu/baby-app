@@ -6,8 +6,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.schedule import Schedule
 from app.schemas.schedule import ScheduleCreate
 
@@ -19,28 +20,30 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_schedules(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """スケジュール一覧ページ"""
     schedules = db.query(Schedule).filter(
-        Schedule.user_id == user.id
+        Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
 
     return templates.TemplateResponse(
         "schedule/list.html",
-        {"request": request, "user": user, "schedules": schedules}
+        {"request": request, "user": user, "baby": baby, "schedules": schedules}
     )
 
 
 @router.get("/new", response_class=HTMLResponse)
 async def new_schedule_form(
     request: Request,
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """新規スケジュールフォーム"""
     return templates.TemplateResponse(
         "schedule/form.html",
-        {"request": request, "user": user, "schedule": None}
+        {"request": request, "user": user, "baby": baby, "schedule": None}
     )
 
 
@@ -49,10 +52,12 @@ async def create_schedule(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: ScheduleCreate = Depends(ScheduleCreate.as_form)
 ):
     """スケジュール作成"""
     new_schedule = Schedule(
+        baby_id=baby.id,
         user_id=user.id,
         **form_data.model_dump()
     )
@@ -68,12 +73,12 @@ async def create_schedule(
         )
 
     schedules = db.query(Schedule).filter(
-        Schedule.user_id == user.id
+        Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
 
     return templates.TemplateResponse(
         "schedule/list.html",
-        {"request": request, "user": user, "schedules": schedules}
+        {"request": request, "user": user, "baby": baby, "schedules": schedules}
     )
 
 
@@ -82,12 +87,13 @@ async def toggle_schedule(
     request: Request,
     schedule_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """スケジュール完了/未完了切り替え"""
     schedule = db.query(Schedule).filter(
         Schedule.id == schedule_id,
-        Schedule.user_id == user.id
+        Schedule.baby_id == baby.id
     ).first()
 
     if not schedule:
@@ -104,12 +110,12 @@ async def toggle_schedule(
         )
 
     schedules = db.query(Schedule).filter(
-        Schedule.user_id == user.id
+        Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
 
     return templates.TemplateResponse(
         "schedule/list.html",
-        {"request": request, "user": user, "schedules": schedules}
+        {"request": request, "user": user, "baby": baby, "schedules": schedules}
     )
 
 
@@ -117,12 +123,13 @@ async def toggle_schedule(
 async def delete_schedule(
     schedule_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """スケジュール削除"""
     schedule = db.query(Schedule).filter(
         Schedule.id == schedule_id,
-        Schedule.user_id == user.id
+        Schedule.baby_id == baby.id
     ).first()
 
     if not schedule:

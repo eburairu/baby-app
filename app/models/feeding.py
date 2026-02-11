@@ -19,7 +19,8 @@ class Feeding(Base):
     __tablename__ = "feedings"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # 記録者
     feeding_time = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     feeding_type = Column(SQLEnum(FeedingType), nullable=False)
     amount_ml = Column(Float, nullable=True)  # ミルクの量（母乳の場合はNull）
@@ -27,4 +28,5 @@ class Feeding(Base):
     notes = Column(String, nullable=True)
 
     # リレーション
-    user = relationship("User", back_populates="feedings")
+    baby = relationship("Baby", back_populates="feedings")
+    user = relationship("User")

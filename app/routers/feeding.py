@@ -7,8 +7,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
+from app.models.baby import Baby
 from app.models.feeding import Feeding, FeedingType
 from app.schemas.feeding import FeedingResponse, FeedingCreate, FeedingUpdate
 
@@ -20,16 +21,17 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_feedings(
     request: Request,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """授乳記録一覧ページ"""
     feedings = db.query(Feeding).filter(
-        Feeding.user_id == user.id
+        Feeding.baby_id == baby.id
     ).order_by(Feeding.feeding_time.desc()).limit(50).all()
 
     return templates.TemplateResponse(
         "feeding/list.html",
-        {"request": request, "user": user, "feedings": feedings}
+        {"request": request, "user": user, "baby": baby, "feedings": feedings}
     )
 
 
