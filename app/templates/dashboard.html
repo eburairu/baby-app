@@ -67,9 +67,9 @@
                 <a href="/contractions" class="inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 transform hover:scale-105">
                     <span class="text-2xl mr-2">⏱️</span> 陣痛タイマー
                 </a>
-                <a href="#" class="inline-flex justify-center items-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200">
+                <button onclick="document.getElementById('born-modal').showModal()" class="inline-flex justify-center items-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 cursor-pointer">
                     👶 生まれました！
-                </a>
+                </button>
             </div>
             <p class="text-xs text-gray-500 mt-4">「生まれました！」を押すと誕生日を設定できます（未実装リンク）</p>
         </div>
@@ -194,9 +194,50 @@
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">⏱️</div>
                 <div class="font-semibold">陣痛タイマー</div>
             </a>
-                </div>
-            </div>
-            {% endif %}
         </div>
-        {% endblock %}
+    </div>
+    {% endif %}
+
+    <!-- 出生記録モーダル -->
+    <dialog id="born-modal" class="p-0 rounded-lg shadow-xl backdrop:bg-gray-900/50 dark:bg-gray-800 dark:text-gray-100">
+        <div class="p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold mb-4 text-center">🎉 おめでとうございます！</h3>
+            <p class="mb-4 text-gray-600 dark:text-gray-300 text-center">赤ちゃんが生まれた日を入力してください。</p>
+            
+            <form action="/babies/{{ baby.id }}/born" method="post" class="space-y-4">
+                <div>
+                    <label for="birthday-input" class="block text-sm font-medium mb-1">誕生日</label>
+                    <input type="date" id="birthday-input" name="birthday" required
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" onclick="document.getElementById('born-modal').close()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                        キャンセル
+                    </button>
+                    <button type="submit" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        確定して開始
+                    </button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <script>
+        (function() {
+            const dateInput = document.getElementById('birthday-input');
+            if (dateInput) {
+                // ローカルタイムゾーンで今日の日付を取得して設定
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                dateInput.value = `${year}-${month}-${day}`;
+            }
+        })();
+    </script>
+    </div>
+{% endblock %}
         
