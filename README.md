@@ -170,7 +170,9 @@ baby-app/
 - SQLAlchemy ORMでSQLインジェクション防止
 - Pydanticバリデーション
 - Jinja2自動エスケープ
+- 詳細な開発ルールやワークフローについては [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
+## 開発に参加する
 ## ライセンス
 
 MIT License
