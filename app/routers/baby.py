@@ -1,5 +1,5 @@
 """赤ちゃん管理ルーター"""
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -11,6 +11,24 @@ from app.dependencies import get_current_user, get_current_family, admin_require
 
 router = APIRouter(prefix="/babies", tags=["baby"])
 templates = Jinja2Templates(directory="app/templates")
+
+
+@router.post("/{baby_id}/delete")
+async def delete_baby(
+    baby_id: int,
+    db: Session = Depends(get_db),
+    family = Depends(get_current_family),
+    _ = Depends(admin_required)
+):
+    """赤ちゃんを削除"""
+    baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
+    if not baby:
+        raise HTTPException(status_code=404, detail="Baby not found")
+    
+    db.delete(baby)
+    db.commit()
+    
+    return RedirectResponse(url="/families/settings", status_code=303)
 
 
 @router.get("/new", response_class=HTMLResponse)

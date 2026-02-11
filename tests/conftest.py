@@ -54,12 +54,47 @@ def db():
         yield session
     finally:
         session.close()
-        # テーブル削除（テスト間の分離 - PostgreSQL用）
-        with _engine.connect() as conn:
-            conn.execute(text(
-                "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-            ))
-            conn.commit()
+        # テーブル削除（テスト間の分離）
+        if str(TEST_DATABASE_URL).startswith("sqlite"):
+            Base.metadata.drop_all(bind=_engine)
+        else:
+            # PostgreSQL用
+            with _engine.connect() as conn:
+                conn.execute(text(
+                    "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+                ))
+                conn.commit()
+
+
+import pytest_asyncio
+from app.main import app
+from app.database import get_db
+import httpx
+
+@pytest_asyncio.fixture
+async def client(db):
+    """FastAPI TestClient (Async)。DBセッションをテスト用にオーバーライド。"""
+    def override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    try:
+        from httpx import ASGITransport, AsyncClient
+        
+        # ASGITransport が __enter__ を持っていない場合のパッチは不要（AsyncClientはawaitで入るため）
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver", follow_redirects=True) as c:
+             yield c
+    except (ImportError, TypeError):
+        # AsyncClientがない場合は同期TestClientにフォールバック（動作保証なし）
+        with TestClient(app) as c:
+            yield c
+            
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

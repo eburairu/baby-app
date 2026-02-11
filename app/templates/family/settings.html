@@ -21,6 +21,65 @@
         </div>
 
         <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">登録済みの赤ちゃん</h3>
+                {% if is_admin %}
+                <a href="/babies/new" class="text-sm bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded">
+                    追加
+                </a>
+                {% endif %}
+            </div>
+            {% if family.babies %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                名前
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                日付
+                            </th>
+                            {% if is_admin %}
+                            <th class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                操作
+                            </th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for baby in family.babies %}
+                        <tr>
+                            <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+                                {{ baby.name }}
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+                                {% if baby.birthday %}
+                                    {{ baby.birthday.strftime('%Y/%m/%d') }} <span class="text-xs text-gray-500">(誕生日)</span>
+                                {% elif baby.due_date %}
+                                    {{ baby.due_date.strftime('%Y/%m/%d') }} <span class="text-xs text-gray-500">(予定日)</span>
+                                {% endif %}
+                            </td>
+                            {% if is_admin %}
+                            <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+                                <form action="/babies/{{ baby.id }}/delete" method="post" onsubmit="return confirm('本当に「{{ baby.name }}」を削除しますか？\n関連するすべての記録も削除されます。\nこの操作は取り消せません。');" class="inline">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 text-sm font-semibold">
+                                        削除
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-500 dark:text-gray-400">登録されている赤ちゃんはいません。</p>
+            {% endif %}
+        </div>
+
+        <div class="mb-8">
             <h3 class="text-lg font-semibold mb-4">メンバー一覧</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full leading-normal">
