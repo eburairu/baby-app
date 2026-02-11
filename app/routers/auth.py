@@ -69,7 +69,7 @@ async def register_page(request: Request):
 @router.post("/register")
 async def register(
     username: str = Form(..., min_length=3, max_length=50),
-    password: str = Form(..., min_length=6),
+    password: str = Form(..., min_length=6, max_length=72),
     db: Session = Depends(get_db)
 ):
     """ユーザー登録処理"""
