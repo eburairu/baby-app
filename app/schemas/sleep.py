@@ -1,14 +1,30 @@
 """睡眠記録スキーマ"""
 from datetime import datetime
 from typing import Optional
+from fastapi import Form
 from pydantic import BaseModel, Field
 
 
 class SleepCreate(BaseModel):
     """睡眠記録作成用スキーマ"""
-    start_time: datetime = Field(default_factory=datetime.utcnow)
+    start_time: datetime
     end_time: Optional[datetime] = None
     notes: Optional[str] = None
+
+    @classmethod
+    def as_form(
+        cls,
+        start_time: str = Form(...),
+        end_time: Optional[str] = Form(None),
+        notes: Optional[str] = Form(None),
+    ):
+        try:
+            st = datetime.fromisoformat(start_time)
+            et = datetime.fromisoformat(end_time) if end_time else None
+        except ValueError:
+            st, et = start_time, end_time
+            
+        return cls(start_time=st, end_time=et, notes=notes)
 
 
 class SleepUpdate(BaseModel):
@@ -16,6 +32,17 @@ class SleepUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     notes: Optional[str] = None
+
+    @classmethod
+    def as_form(
+        cls,
+        start_time: Optional[str] = Form(None),
+        end_time: Optional[str] = Form(None),
+        notes: Optional[str] = Form(None),
+    ):
+        st = datetime.fromisoformat(start_time) if start_time else None
+        et = datetime.fromisoformat(end_time) if end_time else None
+        return cls(start_time=st, end_time=et, notes=notes)
 
 
 class SleepResponse(BaseModel):

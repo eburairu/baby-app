@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.schedule import Schedule
+from app.schemas.schedule import ScheduleCreate
 
 router = APIRouter(prefix="/schedules", tags=["schedules"])
 templates = Jinja2Templates(directory="app/templates")
@@ -46,23 +47,14 @@ async def new_schedule_form(
 @router.post("", response_class=HTMLResponse)
 async def create_schedule(
     request: Request,
-    title: str = Form(...),
-    description: str = Form(None),
-    scheduled_time: str = Form(...),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: ScheduleCreate = Depends(ScheduleCreate.as_form)
 ):
     """スケジュール作成"""
-    try:
-        scheduled_datetime = datetime.fromisoformat(scheduled_time)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日時形式です")
-
     new_schedule = Schedule(
         user_id=user.id,
-        title=title,
-        description=description if description else None,
-        scheduled_time=scheduled_datetime
+        **form_data.model_dump()
     )
 
     db.add(new_schedule)

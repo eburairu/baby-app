@@ -34,6 +34,9 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- トースト通知コンテナ -->
+    <div id="toast-container" class="fixed bottom-20 md:bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
     <script>
         // ダークモード切り替え
         function toggleTheme() {
@@ -45,6 +48,48 @@
                 localStorage.theme = 'dark';
             }
         }
+
+        // トースト表示関数
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+            
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 opacity-0`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            // アニメーション表示
+            setTimeout(() => toast.classList.remove('opacity-0'), 10);
+            
+            // 3秒後に削除
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // htmx エラーハンドリング
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            const xhr = evt.detail.xhr;
+            let message = 'エラーが発生しました';
+            
+            try {
+                const response = JSON.parse(xhr.responseText);
+                message = response.detail || message;
+            } catch (e) {
+                // JSONでない場合はステータステキストを使用
+                message = `エラー: ${xhr.status} ${xhr.statusText}`;
+            }
+            
+            showToast(message, 'error');
+        });
+
+        // 成功通知（カスタムイベント用）
+        document.body.addEventListener('show-toast', function(evt) {
+            showToast(evt.detail.message, evt.detail.type || 'success');
+        });
     </script>
 
     {% block scripts %}{% endblock %}

@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.diaper import Diaper, DiaperType
+from app.schemas.diaper import DiaperCreate
 
 router = APIRouter(prefix="/diapers", tags=["diapers"])
 templates = Jinja2Templates(directory="app/templates")
@@ -85,23 +86,14 @@ async def new_diaper_form(
 @router.post("", response_class=HTMLResponse)
 async def create_diaper(
     request: Request,
-    change_time: str = Form(...),
-    diaper_type: str = Form(...),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: DiaperCreate = Depends(DiaperCreate.as_form)
 ):
     """おむつ交換記録作成"""
-    try:
-        change_datetime = datetime.fromisoformat(change_time)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日時形式です")
-
     new_diaper = Diaper(
         user_id=user.id,
-        change_time=change_datetime,
-        diaper_type=DiaperType(diaper_type),
-        notes=notes if notes else None
+        **form_data.model_dump()
     )
 
     db.add(new_diaper)

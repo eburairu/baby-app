@@ -1,6 +1,7 @@
 """おむつ交換記録スキーマ"""
 from datetime import datetime
 from typing import Optional
+from fastapi import Form
 from pydantic import BaseModel, Field
 
 from app.models.diaper import DiaperType
@@ -8,9 +9,22 @@ from app.models.diaper import DiaperType
 
 class DiaperCreate(BaseModel):
     """おむつ交換記録作成用スキーマ"""
-    change_time: datetime = Field(default_factory=datetime.utcnow)
+    change_time: datetime
     diaper_type: DiaperType
     notes: Optional[str] = None
+
+    @classmethod
+    def as_form(
+        cls,
+        change_time: str = Form(...),
+        diaper_type: DiaperType = Form(...),
+        notes: Optional[str] = Form(None),
+    ):
+        try:
+            ct = datetime.fromisoformat(change_time)
+        except ValueError:
+            ct = change_time
+        return cls(change_time=ct, diaper_type=diaper_type, notes=notes)
 
 
 class DiaperUpdate(BaseModel):

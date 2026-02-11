@@ -10,6 +10,23 @@ class ScheduleCreate(BaseModel):
     description: Optional[str] = None
     scheduled_time: datetime
 
+    @classmethod
+    def as_form(
+        cls,
+        title: str = Form(...),
+        description: Optional[str] = Form(None),
+        scheduled_time: str = Form(...),
+    ):
+        try:
+            st = datetime.fromisoformat(scheduled_time)
+        except ValueError:
+            st = scheduled_time
+        return cls(
+            title=title,
+            description=description,
+            scheduled_time=st
+        )
+
 
 class ScheduleUpdate(BaseModel):
     """スケジュール更新用スキーマ"""

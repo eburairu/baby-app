@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.sleep import Sleep
+from app.schemas.sleep import SleepCreate
 
 router = APIRouter(prefix="/sleeps", tags=["sleeps"])
 templates = Jinja2Templates(directory="app/templates")
@@ -144,24 +145,14 @@ async def new_sleep_form(
 @router.post("", response_class=HTMLResponse)
 async def create_sleep(
     request: Request,
-    start_time: str = Form(...),
-    end_time: str = Form(None),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: SleepCreate = Depends(SleepCreate.as_form)
 ):
     """睡眠記録作成（手動入力）"""
-    try:
-        start_datetime = datetime.fromisoformat(start_time)
-        end_datetime = datetime.fromisoformat(end_time) if end_time else None
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日時形式です")
-
     new_sleep = Sleep(
         user_id=user.id,
-        start_time=start_datetime,
-        end_time=end_datetime,
-        notes=notes if notes else None
+        **form_data.model_dump()
     )
 
     db.add(new_sleep)

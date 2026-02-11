@@ -10,7 +10,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.feeding import Feeding, FeedingType
-from app.schemas.feeding import FeedingResponse
+from app.schemas.feeding import FeedingResponse, FeedingCreate, FeedingUpdate
 
 router = APIRouter(prefix="/feedings", tags=["feedings"])
 templates = Jinja2Templates(directory="app/templates")
@@ -53,29 +53,15 @@ async def new_feeding_form(
 @router.post("", response_class=HTMLResponse)
 async def create_feeding(
     request: Request,
-    feeding_time: str = Form(...),
-    feeding_type: str = Form(...),
-    amount_ml: float = Form(None),
-    duration_minutes: int = Form(None),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: FeedingCreate = Depends(FeedingCreate.as_form)
 ):
     """授乳記録作成"""
-    # 日時のパース
-    try:
-        feeding_datetime = datetime.fromisoformat(feeding_time)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日時形式です")
-
     # 新しい記録を作成
     new_feeding = Feeding(
         user_id=user.id,
-        feeding_time=feeding_datetime,
-        feeding_type=FeedingType(feeding_type),
-        amount_ml=amount_ml if amount_ml else None,
-        duration_minutes=duration_minutes if duration_minutes else None,
-        notes=notes if notes else None
+        **form_data.model_dump()
     )
 
     db.add(new_feeding)
@@ -132,13 +118,9 @@ async def edit_feeding_form(
 async def update_feeding(
     request: Request,
     feeding_id: int,
-    feeding_time: str = Form(...),
-    feeding_type: str = Form(...),
-    amount_ml: float = Form(None),
-    duration_minutes: int = Form(None),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: FeedingUpdate = Depends(FeedingUpdate.as_form)
 ):
     """授乳記録更新"""
     feeding = db.query(Feeding).filter(
@@ -149,16 +131,10 @@ async def update_feeding(
     if not feeding:
         raise HTTPException(status_code=404, detail="記録が見つかりません")
 
-    # 更新
-    try:
-        feeding.feeding_time = datetime.fromisoformat(feeding_time)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日時形式です")
-
-    feeding.feeding_type = FeedingType(feeding_type)
-    feeding.amount_ml = amount_ml if amount_ml else None
-    feeding.duration_minutes = duration_minutes if duration_minutes else None
-    feeding.notes = notes if notes else None
+    # 更新データを適用
+    update_data = form_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(feeding, key, value)
 
     db.commit()
     db.refresh(feeding)

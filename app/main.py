@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from fastapi.exceptions import RequestValidationError
 from app.config import settings
 from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule
 from app.dependencies import get_current_user_optional, AuthenticationRequired
@@ -22,6 +23,24 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 # ===== エラーハンドラー =====
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """バリデーションエラーのハンドラー"""
+    # エラーメッセージを一つにまとめる
+    errors = exc.errors()
+    if errors:
+        msg = errors[0].get("msg", "入力内容に誤りがあります")
+        # "Value error, " などのプレフィックスを削除（Pydantic v2 用）
+        msg = msg.replace("Value error, ", "").replace("Assertion failed, ", "")
+    else:
+        msg = "入力内容に誤りがあります"
+
+    return JSONResponse(
+        status_code=400,
+        content={"detail": msg},
+    )
+
 
 @app.exception_handler(AuthenticationRequired)
 async def auth_required_handler(request: Request, exc: AuthenticationRequired):

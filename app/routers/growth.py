@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.growth import Growth
+from app.schemas.growth import GrowthCreate
 
 router = APIRouter(prefix="/growths", tags=["growths"])
 templates = Jinja2Templates(directory="app/templates")
@@ -63,27 +64,14 @@ async def new_growth_form(
 @router.post("", response_class=HTMLResponse)
 async def create_growth(
     request: Request,
-    measurement_date: str = Form(...),
-    weight_kg: float = Form(None),
-    height_cm: float = Form(None),
-    head_circumference_cm: float = Form(None),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: GrowthCreate = Depends(GrowthCreate.as_form)
 ):
     """成長記録作成"""
-    try:
-        measurement_date_obj = date.fromisoformat(measurement_date)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日付形式です")
-
     new_growth = Growth(
         user_id=user.id,
-        measurement_date=measurement_date_obj,
-        weight_kg=weight_kg if weight_kg else None,
-        height_cm=height_cm if height_cm else None,
-        head_circumference_cm=head_circumference_cm if head_circumference_cm else None,
-        notes=notes if notes else None
+        **form_data.model_dump()
     )
 
     db.add(new_growth)
@@ -132,13 +120,9 @@ async def edit_growth_form(
 async def update_growth(
     request: Request,
     growth_id: int,
-    measurement_date: str = Form(...),
-    weight_kg: float = Form(None),
-    height_cm: float = Form(None),
-    head_circumference_cm: float = Form(None),
-    notes: str = Form(None),
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    form_data: GrowthCreate = Depends(GrowthCreate.as_form)
 ):
     """成長記録更新"""
     growth = db.query(Growth).filter(
@@ -149,15 +133,10 @@ async def update_growth(
     if not growth:
         raise HTTPException(status_code=404, detail="記録が見つかりません")
 
-    try:
-        growth.measurement_date = date.fromisoformat(measurement_date)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="無効な日付形式です")
-
-    growth.weight_kg = weight_kg if weight_kg else None
-    growth.height_cm = height_cm if height_cm else None
-    growth.head_circumference_cm = head_circumference_cm if head_circumference_cm else None
-    growth.notes = notes if notes else None
+    # 更新データを適用
+    update_data = form_data.model_dump()
+    for key, value in update_data.items():
+        setattr(growth, key, value)
 
     db.commit()
     db.refresh(growth)

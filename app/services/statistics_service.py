@@ -40,15 +40,23 @@ class StatisticsService:
     def get_sleep_stats(db: Session, user_id: int, days: int = 7) -> dict:
         """睡眠統計を取得"""
         start_date = datetime.utcnow() - timedelta(days=days)
+        now = datetime.utcnow()
 
-        # 完了した睡眠記録のみ（end_timeが存在する）
+        # 期間内のすべての睡眠記録
         sleeps = db.query(Sleep).filter(
             Sleep.user_id == user_id,
-            Sleep.start_time >= start_date,
-            Sleep.end_time.isnot(None)
+            Sleep.start_time >= start_date
         ).all()
 
-        total_minutes = sum(sleep.duration_minutes for sleep in sleeps)
+        total_minutes = 0
+        for sleep in sleeps:
+            if sleep.end_time:
+                total_minutes += sleep.duration_minutes
+            else:
+                # 継続中の場合は現在時刻までの時間を加算
+                delta = now - sleep.start_time
+                total_minutes += int(delta.total_seconds() / 60)
+
         avg_minutes = total_minutes / len(sleeps) if sleeps else 0
         avg_hours = avg_minutes / 60
 
