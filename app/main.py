@@ -1,18 +1,21 @@
 """FastAPI アプリケーションエントリポイント"""
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from typing import Optional
+from fastapi import FastAPI, Request, Depends
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
 from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule
 from app.dependencies import get_current_user_optional
+from app.models.user import User
 
 # FastAPIアプリケーション作成
 app = FastAPI(
     title="Baby-App",
     description="総合育児管理アプリケーション",
-    version="1.0.0"
+    version="1.0.0",
+    default_response_class=JSONResponse  # 明示的にJSONResponseを設定
 )
 
 # セッションミドルウェア追加
@@ -38,9 +41,11 @@ app.include_router(schedule.router)
 
 
 @app.get("/")
-async def root():
-    """ルートパス - ダッシュボードへリダイレクト"""
-    return RedirectResponse(url="/dashboard")
+async def root(user: Optional[User] = Depends(get_current_user_optional)):
+    """ルートパス - 認証状態に応じてリダイレクト"""
+    if user:
+        return RedirectResponse(url="/dashboard")
+    return RedirectResponse(url="/login")
 
 
 @app.get("/health")

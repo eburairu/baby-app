@@ -8,16 +8,8 @@ services:
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: baby-app-db
-          property: connectionString
+        sync: false  # Renderダッシュボードで手動設定（Neon接続文字列）
       - key: SECRET_KEY
         generateValue: true
       - key: ENVIRONMENT
         value: production
-
-databases:
-  - name: baby-app-db
-    databaseName: baby_app
-    user: baby_app_user
-    plan: free
