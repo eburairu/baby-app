@@ -32,12 +32,16 @@ async def permission_denied_handler(request: Request, exc: PermissionDenied):
         response = HTMLResponse(content="", status_code=200)
         if "家族に所属していません" in msg:
             response.headers["HX-Redirect"] = "/families/setup"
+        elif "赤ちゃんが登録されていません" in msg:
+            response.headers["HX-Redirect"] = "/babies/new"
         else:
             response.headers["HX-Redirect"] = "/dashboard"
         return response
 
     if "家族に所属していません" in msg:
         return RedirectResponse(url="/families/setup", status_code=303)
+    if "赤ちゃんが登録されていません" in msg:
+        return RedirectResponse(url="/babies/new", status_code=303)
     return RedirectResponse(url="/dashboard", status_code=303)
 
 
