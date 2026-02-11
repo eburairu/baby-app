@@ -22,6 +22,16 @@ Baby-App は、家族単位で赤ちゃんの育児記録（授乳、睡眠、�
 - **Database**: PostgreSQL (Neon Serverless)
 - **Deployment**: Render
 
+## CI/CD & リリースプロセス
+- **Version Control**: GitHub
+- **Automation**: GitHub Actions
+- **Versioning Strategy**: Semantic Versioning (SemVer)
+- **Release Tool**: python-semantic-release
+  - コミットメッセージに基づき自動でバージョンアップ (Major/Minor/Patch)
+  - CHANGELOG.md の自動生成
+  - GitHub Releases の作成
+  - Git Tag のプッシュ
+
 ## ディレクトリ構造
 ```
 baby-app/

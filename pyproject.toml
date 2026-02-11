@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baby-app"
+version = "0.1.0"
+description = "Comprehensive baby care tracking application"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.semantic_release]
+version_variables = ["app/__init__.py:__version__"]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+upload_to_pypi = false
+upload_to_release = true
+build_command = false
+commit_parser = "angular"
