@@ -1,6 +1,6 @@
 """認証ルーター"""
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -26,15 +26,15 @@ async def login_page(request: Request):
 
 @router.post("/login")
 async def login(
-    user_data: UserLogin,
-    response: Response,
+    username: str = Form(...),
+    password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """ログイン処理"""
     # ユーザー検索
-    user = db.query(User).filter(User.username == user_data.username).first()
+    user = db.query(User).filter(User.username == username).first()
 
-    if not user or not AuthService.verify_password(user_data.password, user.hashed_password):
+    if not user or not AuthService.verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=401,
             detail="ユーザー名またはパスワードが正しくありません"
@@ -68,13 +68,13 @@ async def register_page(request: Request):
 
 @router.post("/register")
 async def register(
-    user_data: UserCreate,
-    response: Response,
+    username: str = Form(..., min_length=3, max_length=50),
+    password: str = Form(..., min_length=6),
     db: Session = Depends(get_db)
 ):
     """ユーザー登録処理"""
     # ユーザー名の重複チェック
-    existing_user = db.query(User).filter(User.username == user_data.username).first()
+    existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         raise HTTPException(
             status_code=400,
@@ -82,9 +82,9 @@ async def register(
         )
 
     # ユーザー作成
-    hashed_password = AuthService.get_password_hash(user_data.password)
+    hashed_password = AuthService.get_password_hash(password)
     new_user = User(
-        username=user_data.username,
+        username=username,
         hashed_password=hashed_password
     )
     db.add(new_user)
