@@ -10,3 +10,4 @@ pydantic-settings==2.1.0
 bcrypt>=4.1.0
 python-dotenv==1.0.0
 itsdangerous==2.1.2
+pytest>=9.0.0

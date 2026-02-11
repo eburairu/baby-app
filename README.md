@@ -78,6 +78,33 @@ uvicorn app.main:app --reload
 
 6. ブラウザで http://localhost:8000 にアクセス
 
+### テスト実行
+
+#### SQLiteモード（デフォルト）
+
+環境変数を設定せずそのまま実行:
+
+```bash
+pytest tests/ -v
+```
+
+#### PostgreSQLモード
+
+1. テスト用PostgreSQLコンテナ起動:
+```bash
+docker compose -f docker-compose.test.yml up -d
+```
+
+2. テスト実行:
+```bash
+TEST_DATABASE_URL=postgresql://test_user:test_password@localhost:5433/baby_app_test pytest tests/ -v
+```
+
+3. テスト終了後、コンテナ停止:
+```bash
+docker compose -f docker-compose.test.yml down
+```
+
 ### Renderデプロイ
 
 1. GitHubリポジトリにプッシュ
