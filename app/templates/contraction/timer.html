@@ -18,7 +18,7 @@
                 <p class="text-sm opacity-90">平均持続時間</p>
                 <p class="text-3xl font-bold">
                     {% if stats.avg_duration_seconds > 0 %}
-                    {{ stats.avg_duration_seconds // 60 }}:{{ (stats.avg_duration_seconds % 60)|string|rjust(2, '0') }}
+                    {{ stats.avg_duration_seconds // 60 }}:{{ "%02d"|format(stats.avg_duration_seconds % 60) }}
                     {% else %}
                     -
                     {% endif %}
@@ -28,7 +28,7 @@
                 <p class="text-sm opacity-90">平均間隔</p>
                 <p class="text-3xl font-bold">
                     {% if stats.avg_interval_seconds > 0 %}
-                    {{ stats.avg_interval_seconds // 60 }}:{{ (stats.avg_interval_seconds % 60)|string|rjust(2, '0') }}
+                    {{ stats.avg_interval_seconds // 60 }}:{{ "%02d"|format(stats.avg_interval_seconds % 60) }}
                     {% else %}
                     -
                     {% endif %}
