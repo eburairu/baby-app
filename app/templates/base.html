@@ -24,6 +24,7 @@
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <meta name="csrf-token" content="{{ request.state.csrf_token }}">
 
     <!-- カスタムCSS -->
     <link rel="stylesheet" href="/static/css/custom.css">
@@ -65,6 +66,12 @@
 
     <script>
         // ダークモード切り替え
+        // HTMX CSRF Token Injection
+        document.body.addEventListener("htmx:configRequest", function(evt) {
+            const token = document.querySelector("meta[name=\"csrf-token\"]").content;
+            evt.detail.headers["X-CSRF-Token"] = token;
+        });
+
         function toggleTheme() {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
@@ -98,52 +105,51 @@
 
         // ローディングオーバーレイ制御
         const loadingOverlay = document.getElementById('loading-overlay');
+        let loadingRequestCount = 0;
+
+        window.showLoading = function() {
+            loadingRequestCount++;
+            loadingOverlay.classList.add('active');
+        };
+
+        window.hideLoading = function() {
+            loadingRequestCount = Math.max(0, loadingRequestCount - 1);
+            if (loadingRequestCount === 0) {
+                // 少し遅延させて、早すぎる点滅を防ぐ
+                setTimeout(() => {
+                    if (loadingRequestCount === 0) {
+                        loadingOverlay.classList.remove('active');
+                    }
+                }, 300);
+            }
+        };
 
         // HTMX リクエスト開始
-        document.body.addEventListener('htmx:configRequest', function() {
-            loadingOverlay.classList.add('active');
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            // data-no-loading 属性がある要素からのリクエストは無視
+            if (evt.detail.elt && (evt.detail.elt.hasAttribute('data-no-loading') || evt.detail.elt.closest('[data-no-loading]'))) {
+                return;
+            }
+            window.showLoading();
         });
 
         // HTMX リクエスト完了 (成功/失敗問わず)
-        document.body.addEventListener('htmx:afterRequest', function() {
-            // 少し遅延させて、早すぎる点滅を防ぐ（オプション）
-            setTimeout(() => {
-                loadingOverlay.classList.remove('active');
-            }, 300);
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // data-no-loading 属性がある要素からのリクエストは無視
+            if (evt.detail.elt && (evt.detail.elt.hasAttribute('data-no-loading') || evt.detail.elt.closest('[data-no-loading]'))) {
+                return;
+            }
+            window.hideLoading();
         });
 
         // 通常のフォーム送信
         document.addEventListener('submit', function(e) {
-            // HTMX経由のフォームは htmx:configRequest で処理されるので除外する必要があるが、
-            // HTMXが処理する場合 e.defaultPrevented が true になることが多い。
-            // あるいは、hx-boostなどでシームレスに処理される場合もある。
-            // ここでは、明示的に form 要素からの submit で、かつ htmx 属性がない、あるいは
-            // HTMXが処理しない場合を想定したいが、
-            // シンプルに「送信ボタンを押したら出す」で、HTMXの場合は二重に出ても問題ない（同じIDなので）。
-            // ただし、バリデーションエラーなどで送信がキャンセルされた場合は消す必要がある。
-            
             // target="_blank" や download 属性がある場合は表示しない
             if (e.target.target === '_blank' || e.target.hasAttribute('download')) {
                 return;
             }
-
-            // 少し遅延させて表示（即時バリデーションエラーなどで一瞬出るのを防ぐ）
-            // setTimeout(() => {
-            //    if (!e.defaultPrevented) { // HTMXなどでキャンセルされていなければ
-            //        loadingOverlay.classList.add('active');
-            //    }
-            // }, 50);
             
-            // 今回はシンプルに、即時表示させる（ユーザー体験優先）
-            // ただし、HTMXで処理される場合は重複処理になるが、class追加は冪等なのでOK。
-            // 問題は「HTMX以外で、ページ遷移を伴う送信」の場合、ページ遷移まで出しっぱなしでOK。
-            
-            // htmx属性がついていないフォームの場合のみここで発火させる手もあるが、
-            // 判定が複雑になるので、一旦すべてのsubmitで表示し、
-            // htmxの場合は afterRequest で消える、という挙動に任せる。
-            // 通常のPOST遷移なら、次のページが読み込まれるまで出しっぱなしで良い。
-            
-            loadingOverlay.classList.add('active');
+            window.showLoading();
         });
 
         // ページバック時のキャッシュ対策 (Safariなど)

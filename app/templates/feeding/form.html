@@ -9,6 +9,7 @@
         hx-swap="afterbegin"
         class="space-y-4"
     >
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div>
             <label for="feeding_time" class="block text-sm font-medium mb-2">
                 授乳時間

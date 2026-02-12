@@ -8,7 +8,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from app.config import settings
 from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule, family, baby
-from app.dependencies import get_current_user_optional, AuthenticationRequired, PermissionDenied
+from app.middleware.csrf import CSRFCookieMiddleware
+from app.dependencies import get_current_user_optional, AuthenticationRequired, PermissionDenied, check_csrf
 from app.models.user import User
 
 # FastAPIアプリケーション作成
@@ -17,7 +18,11 @@ app = FastAPI(
     description="総合育児管理アプリケーション",
     version="1.0.0",
     default_response_class=JSONResponse,
+    dependencies=[Depends(check_csrf)],
 )
+
+# CSRF Cookie Middleware
+app.add_middleware(CSRFCookieMiddleware)
 
 templates = Jinja2Templates(directory="app/templates")
 

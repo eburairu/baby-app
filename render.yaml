@@ -13,3 +13,5 @@ services:
         generateValue: true
       - key: ENVIRONMENT
         value: production
+      - key: SYSTEM_INVITE_CODE
+        sync: false  # Renderダッシュボードで手動設定
