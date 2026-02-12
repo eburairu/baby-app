@@ -81,7 +81,8 @@ export function useDashboard() {
   const { selectedBabyId } = useBabyStore();
 
   const { data, error, mutate } = useSWR<DashboardData>(
-    selectedBabyId ? DashboardEndpoints.data(selectedBabyId) : null,
+    // selectedBabyId が null でも API を呼び出す（バックエンドが最初の赤ちゃんを自動選択）
+    DashboardEndpoints.data(selectedBabyId ?? undefined),
     apiGet,
     {
       refreshInterval: 30000, // 30秒ごと自動更新

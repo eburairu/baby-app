@@ -17,7 +17,7 @@ import { QuickActions } from './components/QuickActions';
 import { BornModal } from './components/BornModal';
 
 export default function DashboardPage() {
-  const { data, isLoading, mutate } = useDashboard();
+  const { data, isLoading, error, mutate } = useDashboard();
   const [bornModalOpen, setBornModalOpen] = useState(false);
 
   // ローディング中
@@ -29,13 +29,21 @@ export default function DashboardPage() {
     );
   }
 
-  // データなし
-  if (!data) {
+  // エラーまたはデータなし
+  if (error || !data) {
     return (
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-8">
-        <p className="text-center text-gray-500 dark:text-gray-400">
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-4">
           データを読み込めませんでした
         </p>
+        <div className="flex justify-center">
+          <button
+            onClick={() => mutate()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+          >
+            再読み込み
+          </button>
+        </div>
       </div>
     );
   }
