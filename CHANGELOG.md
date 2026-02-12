@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v1.5.0 (2026-02-12)
+
+### Documentation
+
+- Update setup instructions and environment configuration
+  ([`e055f6e`](https://github.com/eburairu/baby-app/commit/e055f6ee4777e106a6a33cd3908ac5f05f15704e))
+
+### Features
+
+- Add editing functionality to diaper, sleep, schedule, and contraction records
+  ([`664339a`](https://github.com/eburairu/baby-app/commit/664339ac9b4078d36f970ad99ddb80a8a72ea09b))
+
+- Change timezone from UTC to Asia/Tokyo
+  ([`3844f2b`](https://github.com/eburairu/baby-app/commit/3844f2b4eac057e033b73566064e128ef9530f0c))
+
+
 ## v1.4.1 (2026-02-12)
 
 ### Bug Fixes
