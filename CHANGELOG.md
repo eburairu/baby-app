@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.8.0 (2026-02-12)
+
+### Features
+
+- Implement granular baby visibility control in dashboard and settings
+  ([`99b3fd0`](https://github.com/eburairu/baby-app/commit/99b3fd0dcb1c319b7f76c004de5fe8e50f5aa560))
+
+### Testing
+
+- Expand test suite for RBAC and dependency logic to prevent regressions
+  ([`347fa12`](https://github.com/eburairu/baby-app/commit/347fa1287dd1a395c024eb5dcfdd7c02cb0abdc9))
+
+
 ## v1.7.1 (2026-02-12)
 
 ### Bug Fixes
