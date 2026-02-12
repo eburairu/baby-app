@@ -7,12 +7,14 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby, check_record_permission
+from app.dependencies import get_current_user, get_current_baby, get_current_family, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
+from app.models.family import Family
 from app.models.contraction import Contraction
 from app.schemas.contraction import ContractionUpdate
 from app.services.contraction_service import ContractionService
+from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/contractions", tags=["contractions"])
 
@@ -22,6 +24,7 @@ async def contraction_timer(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("contraction"))
 ):
@@ -40,6 +43,13 @@ async def contraction_timer(
     # 直近1時間の統計
     stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     response = templates.TemplateResponse(
         "contraction/timer.html",
         {
@@ -48,7 +58,9 @@ async def contraction_timer(
             "baby": baby,
             "ongoing_contraction": ongoing_contraction,
             "contractions": contractions,
-            "stats": stats
+            "stats": stats,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
         }
     )
 

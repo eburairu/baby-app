@@ -76,6 +76,8 @@ def dashboard(
             "family": family,
             "baby": baby,
             "all_babies": visible_babies,
+            "viewable_babies": visible_babies,  # グローバルナビゲーション用
+            "current_baby": baby,  # グローバルナビゲーション用
             "feeding_stats": feeding_stats,
             "sleep_stats": sleep_stats,
             "diaper_stats": diaper_stats,

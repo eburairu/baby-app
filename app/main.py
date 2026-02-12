@@ -29,8 +29,56 @@ app.add_middleware(CSRFCookieMiddleware)
 
 @app.exception_handler(PermissionDenied)
 async def permission_denied_handler(request: Request, exc: PermissionDenied):
-    """権限不足時のハンドラー"""
+    """権限不足時のハンドラー（改善版）"""
     msg = str(exc)
+
+    # 特定の赤ちゃんの閲覧権限がない場合
+    if "この赤ちゃんの情報を閲覧する権限がありません" in msg:
+        # 閲覧可能な赤ちゃんを探してリダイレクト
+        try:
+            from sqlalchemy.orm import Session
+            from app.database import SessionLocal
+            from app.models.user_session import UserSession
+            from app.models.user import User
+            from app.services.permission_service import PermissionService
+
+            # セッショントークンからユーザーを取得
+            session_token = request.cookies.get("session_token")
+            if session_token:
+                db = SessionLocal()
+                try:
+                    user_session = db.query(UserSession).filter(
+                        UserSession.token == session_token
+                    ).first()
+
+                    if user_session and not user_session.is_expired:
+                        user = db.query(User).filter(User.id == user_session.user_id).first()
+                        if user and user.families:
+                            family = user.families[0].family
+
+                            # 閲覧可能な赤ちゃんを探す
+                            baby_ids = [b.id for b in family.babies]
+                            perms_map = PermissionService.get_user_permissions_batch(
+                                db, user.id, baby_ids, family.id, "basic_info"
+                            )
+                            viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
+                            if viewable_babies:
+                                # 閲覧可能な最初の赤ちゃんのダッシュボードにリダイレクト
+                                redirect_url = f"/dashboard?baby_id={viewable_babies[0].id}&permission_denied=1"
+
+                                if request.headers.get("HX-Request"):
+                                    response = HTMLResponse(content="", status_code=200)
+                                    response.headers["HX-Redirect"] = redirect_url
+                                    return response
+
+                                return RedirectResponse(url=redirect_url, status_code=303)
+                finally:
+                    db.close()
+        except Exception:
+            pass  # エラーが発生した場合はデフォルト処理へ
+
+    # 既存のロジック（その他のエラーケース）
     if request.headers.get("HX-Request"):
         response = HTMLResponse(content="", status_code=200)
         if "家族に所属していません" in msg:

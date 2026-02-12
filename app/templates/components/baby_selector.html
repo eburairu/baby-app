@@ -1,0 +1,31 @@
+{% if viewable_babies and viewable_babies|length > 0 %}
+<div class="flex items-center gap-2">
+    <label for="baby-selector-nav" class="text-sm font-medium hidden md:inline">赤ちゃん:</label>
+    <select id="baby-selector-nav" name="baby_id"
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500"
+            onchange="switchBaby(this.value)">
+        {% for b in viewable_babies %}
+        <option value="{{ b.id }}" {% if current_baby and b.id == current_baby.id %}selected{% endif %}>
+            {{ b.name }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+<script>
+function switchBaby(babyId) {
+    // 現在のパスを取得
+    const currentPath = window.location.pathname;
+    const currentSearch = new URLSearchParams(window.location.search);
+
+    // baby_idパラメータを更新
+    currentSearch.set('baby_id', babyId);
+
+    // permission_deniedパラメータを削除（リダイレクト通知を再表示しないため）
+    currentSearch.delete('permission_denied');
+
+    // 同じページで赤ちゃんを切り替え
+    window.location.href = currentPath + '?' + currentSearch.toString();
+}
+</script>
+{% endif %}
