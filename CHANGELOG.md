@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.8.2 (2026-02-12)
+
+### Performance Improvements
+
+- Optimize database queries and add performance indexes
+  ([`53c9747`](https://github.com/eburairu/baby-app/commit/53c9747427d4e307d150e5cdf9f2ab330de32ff4))
+
+
 ## v1.8.1 (2026-02-12)
 
 ### Bug Fixes
