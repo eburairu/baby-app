@@ -22,7 +22,7 @@ async def list_feedings(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
 ):
     """授乳記録一覧ページ"""
     feedings = db.query(Feeding).filter(
@@ -57,12 +57,14 @@ async def create_feeding(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: FeedingCreate = Depends(FeedingCreate.as_form)
 ):
     """授乳記録作成"""
     # 新しい記録を作成
     new_feeding = Feeding(
         user_id=user.id,
+        baby_id=baby.id,
         **form_data.model_dump()
     )
 
@@ -122,6 +124,7 @@ async def update_feeding(
     feeding_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
     form_data: FeedingUpdate = Depends(FeedingUpdate.as_form)
 ):
     """授乳記録更新"""
