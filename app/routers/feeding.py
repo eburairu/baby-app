@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.feeding import Feeding, FeedingType
@@ -22,6 +22,7 @@ async def list_feedings(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """授乳記録一覧ページ"""
     feedings = db.query(Feeding).filter(
@@ -33,37 +34,23 @@ async def list_feedings(
         {"request": request, "user": user, "baby": baby, "feedings": feedings}
     )
 
-
     # 選択された赤ちゃんIDをクッキーに保存
-
-
     response.set_cookie(
-
-
         key="selected_baby_id",
-
-
         value=str(baby.id),
-
-
         max_age=7 * 24 * 60 * 60,
-
-
         httponly=False,
-
-
         samesite="lax"
-
-
     )
-
-
     return response
+
+
 @router.get("/new", response_class=HTMLResponse)
 async def new_feeding_form(
     request: Request,
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """新規授乳記録フォーム"""
     return templates.TemplateResponse(
@@ -84,7 +71,8 @@ async def create_feeding(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: FeedingCreate = Depends(FeedingCreate.as_form)
+    form_data: FeedingCreate = Depends(FeedingCreate.as_form),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """授乳記録作成"""
     # 新しい記録を作成
@@ -123,12 +111,14 @@ async def edit_feeding_form(
     request: Request,
     feeding_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """授乳記録編集フォーム"""
     feeding = db.query(Feeding).filter(
         Feeding.id == feeding_id,
-        Feeding.user_id == user.id
+        Feeding.baby_id == baby.id
     ).first()
 
     if not feeding:
@@ -139,6 +129,7 @@ async def edit_feeding_form(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "feeding": feeding,
             "feeding_types": FeedingType
         }
@@ -152,12 +143,13 @@ async def update_feeding(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: FeedingUpdate = Depends(FeedingUpdate.as_form)
+    form_data: FeedingUpdate = Depends(FeedingUpdate.as_form),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """授乳記録更新"""
     feeding = db.query(Feeding).filter(
         Feeding.id == feeding_id,
-        Feeding.user_id == user.id
+        Feeding.baby_id == baby.id
     ).first()
 
     if not feeding:
@@ -195,12 +187,14 @@ async def update_feeding(
 async def delete_feeding(
     feeding_id: int,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("feeding"))
 ):
     """授乳記録削除"""
     feeding = db.query(Feeding).filter(
         Feeding.id == feeding_id,
-        Feeding.user_id == user.id
+        Feeding.baby_id == baby.id
     ).first()
 
     if not feeding:

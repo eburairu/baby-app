@@ -7,7 +7,7 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.contraction import Contraction
@@ -22,7 +22,8 @@ async def contraction_timer(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛タイマーページ"""
     # 継続中の陣痛を取得
@@ -51,38 +52,24 @@ async def contraction_timer(
         }
     )
 
-
     # 選択された赤ちゃんIDをクッキーに保存
-
-
     response.set_cookie(
-
-
         key="selected_baby_id",
-
-
         value=str(baby.id),
-
-
         max_age=7 * 24 * 60 * 60,
-
-
         httponly=False,
-
-
         samesite="lax"
-
-
     )
-
-
     return response
+
+
 @router.post("/start", response_class=HTMLResponse)
 async def start_contraction(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛開始"""
     # 既に継続中の陣痛があるかチェック
@@ -138,7 +125,8 @@ async def end_contraction(
     contraction_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛終了"""
     contraction = db.query(Contraction).filter(
@@ -191,7 +179,8 @@ async def contraction_list(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛記録一覧（htmx自動更新用）"""
     contractions = db.query(Contraction).filter(
@@ -217,7 +206,8 @@ async def edit_contraction_form(
     contraction_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛記録編集フォーム"""
     contraction = db.query(Contraction).filter(
@@ -246,7 +236,8 @@ async def update_contraction(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: ContractionUpdate = Depends(ContractionUpdate.as_form)
+    form_data: ContractionUpdate = Depends(ContractionUpdate.as_form),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛記録更新"""
     contraction = db.query(Contraction).filter(
@@ -291,9 +282,6 @@ async def update_contraction(
     db.refresh(contraction)
 
     if request.headers.get("HX-Request"):
-        # 一覧全体を更新する必要があるかもしれない（他の方の間隔も変わるため）
-        # しかし、item.html を返すのが HTMX の基本
-        # 間隔が変わった場合を考慮して list.html を返すのが安全
         contractions = db.query(Contraction).filter(
             Contraction.baby_id == baby.id
         ).order_by(Contraction.start_time.desc()).limit(20).all()
@@ -318,7 +306,8 @@ async def delete_contraction(
     contraction_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("contraction"))
 ):
     """陣痛記録削除"""
     contraction = db.query(Contraction).filter(

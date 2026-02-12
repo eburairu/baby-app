@@ -7,7 +7,7 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.diaper import Diaper, DiaperType
@@ -21,7 +21,8 @@ async def list_diapers(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """おむつ交換記録一覧ページ"""
     diapers = db.query(Diaper).filter(
@@ -49,7 +50,8 @@ async def quick_diaper(
     diaper_type: str = Form(...),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """ワンタップでおむつ交換記録"""
     new_diaper = Diaper(
@@ -83,7 +85,8 @@ async def quick_diaper(
 async def new_diaper_form(
     request: Request,
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """新規おむつ交換記録フォーム"""
     return templates.TemplateResponse(
@@ -104,7 +107,8 @@ async def create_diaper(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: DiaperCreate = Depends(DiaperCreate.as_form)
+    form_data: DiaperCreate = Depends(DiaperCreate.as_form),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """おむつ交換記録作成"""
     new_diaper = Diaper(
@@ -139,7 +143,8 @@ async def edit_diaper_form(
     diaper_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """おむつ交換記録編集フォーム"""
     diaper = db.query(Diaper).filter(
@@ -169,7 +174,8 @@ async def update_diaper(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: DiaperUpdate = Depends(DiaperUpdate.as_form)
+    form_data: DiaperUpdate = Depends(DiaperUpdate.as_form),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """おむつ交換記録更新"""
     diaper = db.query(Diaper).filter(
@@ -209,7 +215,8 @@ async def delete_diaper(
     diaper_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("diaper"))
 ):
     """おむつ交換記録削除"""
     diaper = db.query(Diaper).filter(

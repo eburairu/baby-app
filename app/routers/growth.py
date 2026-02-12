@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.growth import Growth
@@ -20,7 +20,8 @@ async def list_growths(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長記録一覧ページ"""
     growths = db.query(Growth).filter(
@@ -38,7 +39,8 @@ async def growth_chart(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長グラフページ"""
     growths = db.query(Growth).filter(
@@ -55,7 +57,8 @@ async def growth_chart(
 async def new_growth_form(
     request: Request,
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("growth"))
 ):
     """新規成長記録フォーム"""
     return templates.TemplateResponse(
@@ -70,7 +73,8 @@ async def create_growth(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: GrowthCreate = Depends(GrowthCreate.as_form)
+    form_data: GrowthCreate = Depends(GrowthCreate.as_form),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長記録作成"""
     new_growth = Growth(
@@ -105,7 +109,8 @@ async def edit_growth_form(
     growth_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長記録編集フォーム"""
     growth = db.query(Growth).filter(
@@ -129,7 +134,8 @@ async def update_growth(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: GrowthCreate = Depends(GrowthCreate.as_form)
+    form_data: GrowthCreate = Depends(GrowthCreate.as_form),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長記録更新"""
     growth = db.query(Growth).filter(
@@ -169,7 +175,8 @@ async def delete_growth(
     growth_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("growth"))
 ):
     """成長記録削除"""
     growth = db.query(Growth).filter(
