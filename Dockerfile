@@ -1,25 +1,42 @@
-# Python 3.10ベースイメージ
+# --- Stage 1: Build Frontend ---
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Install dependencies
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY frontend/ .
+
+# Build Next.js application (output to 'out' directory)
+RUN npm run build
+
+# --- Stage 2: Build Backend ---
 FROM python:3.10-slim
 
-# 作業ディレクトリ設定
 WORKDIR /app
 
-# PostgreSQLクライアントライブラリのインストール
+# Install PostgreSQL client libraries
 RUN apt-get update && \
     apt-get install -y libpq-dev gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# 依存関係ファイルをコピー
+# Install Python dependencies
 COPY requirements.txt .
-
-# 依存関係をインストール
 RUN pip install --no-cache-dir -r requirements.txt
 
-# アプリケーションコードをコピー
+# Copy backend code
 COPY . .
 
-# ポート8000を公開
+# Copy frontend build artifacts from Stage 1
+# Ensure destination directory exists or is created by COPY
+COPY --from=frontend-builder /app/frontend/out /app/frontend/out
+
+# Expose port (Render sets PORT env var, but good for local)
 EXPOSE 8000
 
-# 開発サーバー起動コマンド
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Start command
+# Uses shell form to substitute environment variables if needed, specifically $PORT
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
