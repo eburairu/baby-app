@@ -2,7 +2,7 @@
 import secrets
 from datetime import datetime
 from typing import Optional
-from fastapi import Cookie, Depends, Request
+from fastapi import Cookie, Depends, Request, Response, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -126,3 +126,40 @@ def get_current_user_optional(
         return None
 
     return db.query(User).filter(User.id == user_session.user_id).first()
+
+
+async def check_csrf(request: Request):
+    """CSRF対策の共通依存関係"""
+    csrf_token = getattr(request.state, "csrf_token", None)
+    if not csrf_token:
+        # Fallback if middleware is missing or cookie not set
+        csrf_token = request.cookies.get("csrf_token")
+        if not csrf_token:
+             # Generate new token if missing
+            csrf_token = secrets.token_urlsafe(32)
+            request.state.csrf_token = csrf_token
+
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        header_token = request.headers.get("X-CSRF-Token")
+        form_token = None
+
+        # Check form data if header is missing
+        content_type = request.headers.get("content-type", "")
+        if not header_token and (
+            content_type.startswith("multipart/form-data") or
+            content_type.startswith("application/x-www-form-urlencoded")
+        ):
+            try:
+                # Using await request.form() inside dependency is safe as it uses cached data
+                form = await request.form()
+                form_token = form.get("csrf_token")
+            except Exception:
+                pass
+
+        submitted_token = header_token or form_token
+
+        if not submitted_token or not secrets.compare_digest(submitted_token, csrf_token):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="CSRF token missing or incorrect"
+            )
