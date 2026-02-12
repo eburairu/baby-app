@@ -2,18 +2,17 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_baby
+from app.utils.templates import templates
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.schedule import Schedule
 from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
 
 router = APIRouter(prefix="/schedules", tags=["schedules"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

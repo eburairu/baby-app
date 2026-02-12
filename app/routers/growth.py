@@ -2,10 +2,10 @@
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.utils.templates import templates
 from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
 from app.models.baby import Baby
@@ -13,7 +13,6 @@ from app.models.growth import Growth
 from app.schemas.growth import GrowthCreate
 
 router = APIRouter(prefix="/growths", tags=["growths"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

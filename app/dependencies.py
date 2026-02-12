@@ -80,12 +80,16 @@ async def get_current_baby(
     request: Request,
     family: Family = Depends(get_current_family),
     baby_id: Optional[int] = Query(None),  # URLクエリパラメータ
+    selected_baby_id: Optional[str] = Cookie(None),  # クッキーから選択中の赤ちゃんID
     db: Session = Depends(get_db)
 ) -> Baby:
     """現在操作対象の赤ちゃんを取得
 
-    URLクエリパラメータまたはPOSTフォームデータから baby_id を取得します。
-    指定がない場合は、家族の最初の赤ちゃんを返します。
+    優先順位:
+    1. URLクエリパラメータの baby_id
+    2. POSTフォームデータの baby_id
+    3. クッキーの selected_baby_id
+    4. 家族の最初の赤ちゃん（デフォルト）
     """
     if not family.babies:
         raise PermissionDenied("赤ちゃんが登録されていません。")
@@ -100,6 +104,13 @@ async def get_current_baby(
                 if baby_id_str:
                     baby_id = int(baby_id_str)
             except Exception:
+                pass
+
+        # クエリパラメータもフォームデータもない場合、クッキーから取得
+        if not baby_id and selected_baby_id:
+            try:
+                baby_id = int(selected_baby_id)
+            except (ValueError, TypeError):
                 pass
 
     if baby_id:
