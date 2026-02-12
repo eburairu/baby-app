@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     SYSTEM_INVITE_CODE: str
     ENVIRONMENT: str = "development"
+    TIMEZONE: str = "Asia/Tokyo"
 
     class Config:
         env_file = ".env"

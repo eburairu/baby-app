@@ -4,12 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.contraction import Contraction
+from app.schemas.contraction import ContractionUpdate
 from app.services.contraction_service import ContractionService
 
 router = APIRouter(prefix="/contractions", tags=["contractions"])
@@ -78,7 +80,7 @@ async def start_contraction(
     new_contraction = Contraction(
         baby_id=baby.id,
         user_id=user.id,
-        start_time=datetime.utcnow(),
+        start_time=get_now_naive(),
         interval_seconds=interval_seconds
     )
 
@@ -130,7 +132,7 @@ async def end_contraction(
         )
 
     # 終了時刻と持続時間を設定
-    end_time = datetime.utcnow()
+    end_time = get_now_naive()
     contraction.end_time = end_time
     contraction.duration_seconds = ContractionService.calculate_duration(
         contraction.start_time,
@@ -183,6 +185,108 @@ async def contraction_list(
             "stats": stats
         }
     )
+
+
+@router.get("/{contraction_id}/edit", response_class=HTMLResponse)
+async def edit_contraction_form(
+    request: Request,
+    contraction_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
+):
+    """陣痛記録編集フォーム"""
+    contraction = db.query(Contraction).filter(
+        Contraction.id == contraction_id,
+        Contraction.baby_id == baby.id
+    ).first()
+
+    if not contraction:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    return templates.TemplateResponse(
+        "contraction/form.html",
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "contraction": contraction
+        }
+    )
+
+
+@router.post("/{contraction_id}", response_class=HTMLResponse)
+async def update_contraction(
+    request: Request,
+    contraction_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    form_data: ContractionUpdate = Depends(ContractionUpdate.as_form)
+):
+    """陣痛記録更新"""
+    contraction = db.query(Contraction).filter(
+        Contraction.id == contraction_id,
+        Contraction.baby_id == baby.id
+    ).first()
+
+    if not contraction:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    # 更新データを適用
+    update_data = form_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(contraction, key, value)
+
+    # 持続時間を再計算
+    if contraction.end_time:
+        contraction.duration_seconds = ContractionService.calculate_duration(
+            contraction.start_time,
+            contraction.end_time
+        )
+    else:
+        contraction.duration_seconds = None
+
+    db.commit()
+    
+    # 全ての間隔を再計算（開始時間が前後する可能性があるため）
+    # シンプルにするため、この赤ちゃんの全記録を取得して間隔を再設定
+    all_contractions = db.query(Contraction).filter(
+        Contraction.baby_id == baby.id
+    ).order_by(Contraction.start_time.asc()).all()
+
+    prev_end = None
+    for c in all_contractions:
+        if prev_end:
+            c.interval_seconds = int((c.start_time - prev_end).total_seconds())
+        else:
+            c.interval_seconds = None
+        prev_end = c.end_time
+
+    db.commit()
+    db.refresh(contraction)
+
+    if request.headers.get("HX-Request"):
+        # 一覧全体を更新する必要があるかもしれない（他の方の間隔も変わるため）
+        # しかし、item.html を返すのが HTMX の基本
+        # 間隔が変わった場合を考慮して list.html を返すのが安全
+        contractions = db.query(Contraction).filter(
+            Contraction.baby_id == baby.id
+        ).order_by(Contraction.start_time.desc()).limit(20).all()
+        
+        stats = ContractionService.get_statistics(db, baby.id, hours=1)
+        
+        return templates.TemplateResponse(
+            "contraction/list.html",
+            {
+                "request": request,
+                "baby": baby,
+                "contractions": contractions,
+                "stats": stats
+            }
+        )
+
+    return await contraction_timer(request, db, user, baby)
 
 
 @router.delete("/{contraction_id}", response_class=HTMLResponse)

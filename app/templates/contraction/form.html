@@ -1,49 +1,41 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-    <h3 class="text-xl font-semibold mb-4">
-        {% if diaper %}おむつ交換記録を編集{% else %}おむつ交換記録を追加{% endif %}
-    </h3>
+    <h3 class="text-xl font-semibold mb-4">陣痛記録を編集</h3>
 
     <form
-        {% if diaper %}
-            hx-post="/diapers/{{ diaper.id }}"
-            hx-target="#diaper-{{ diaper.id }}"
-            hx-swap="outerHTML"
-        {% else %}
-            hx-post="/diapers"
-            hx-target="#diaper-list"
-            hx-swap="afterbegin"
-        {% endif %}
+        hx-post="/contractions/{{ contraction.id }}"
+        hx-target="#contraction-list-container"
+        hx-swap="innerHTML"
         class="space-y-4"
     >
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div>
-            <label for="change_time" class="block text-sm font-medium mb-2">
-                交換時間
+            <label for="start_time" class="block text-sm font-medium mb-2">
+                開始時間
             </label>
             <input
                 type="datetime-local"
-                id="change_time"
-                name="change_time"
-                value="{% if diaper %}{{ diaper.change_time.strftime('%Y-%m-%dT%H:%M') }}{% else %}{{ now().strftime('%Y-%m-%dT%H:%M') }}{% endif %}"
+                step="1"
+                id="start_time"
+                name="start_time"
+                value="{{ contraction.start_time.strftime('%Y-%m-%dT%H:%M:%S') }}"
                 required
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
             >
         </div>
 
         <div>
-            <label for="diaper_type" class="block text-sm font-medium mb-2">
-                種類
+            <label for="end_time" class="block text-sm font-medium mb-2">
+                終了時間
             </label>
-            <select
-                id="diaper_type"
-                name="diaper_type"
-                required
+            <input
+                type="datetime-local"
+                step="1"
+                id="end_time"
+                name="end_time"
+                value="{% if contraction.end_time %}{{ contraction.end_time.strftime('%Y-%m-%dT%H:%M:%S') }}{% endif %}"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                placeholder="任意（継続中の場合は空）"
             >
-                <option value="wet" {% if diaper and diaper.diaper_type.value == 'wet' %}selected{% endif %}>💧 おしっこ</option>
-                <option value="dirty" {% if diaper and diaper.diaper_type.value == 'dirty' %}selected{% endif %}>💩 うんち</option>
-                <option value="both" {% if diaper and diaper.diaper_type.value == 'both' %}selected{% endif %}>💧💩 両方</option>
-            </select>
         </div>
 
         <div>
@@ -56,7 +48,7 @@
                 rows="3"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
                 placeholder="任意"
-            >{% if diaper and diaper.notes %}{{ diaper.notes }}{% endif %}</textarea>
+            >{% if contraction.notes %}{{ contraction.notes }}{% endif %}</textarea>
         </div>
 
         <div class="flex gap-2">
@@ -64,7 +56,7 @@
                 type="submit"
                 class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
             >
-                {% if diaper %}更新{% else %}追加{% endif %}
+                更新
             </button>
             <button
                 type="button"

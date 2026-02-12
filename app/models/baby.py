@@ -2,6 +2,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from app.utils.time import get_now_naive
 
 from app.database import Base
 
@@ -15,7 +16,7 @@ class Baby(Base):
     name = Column(String, nullable=False)
     birthday = Column(Date, nullable=True)
     due_date = Column(Date, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=get_now_naive, nullable=False)
 
     # リレーション
     family = relationship("Family", back_populates="babies")

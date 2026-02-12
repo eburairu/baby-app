@@ -3,6 +3,7 @@ from datetime import datetime
 import secrets
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
+from app.utils.time import get_now_naive
 
 from app.database import Base
 
@@ -14,7 +15,7 @@ class Family(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     invite_code = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=get_now_naive, nullable=False)
 
     # リレーション
     members = relationship("FamilyUser", back_populates="family", cascade="all, delete-orphan")

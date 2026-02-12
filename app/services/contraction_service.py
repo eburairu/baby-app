@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from app.utils.time import get_now_naive
 
 from app.models.contraction import Contraction
 
@@ -25,7 +26,7 @@ class ContractionService:
             return None
 
         # 前回の終了時刻から現在までの秒数
-        now = datetime.utcnow()
+        now = get_now_naive()
         interval = (now - last_contraction.end_time).total_seconds()
 
         return int(interval)
@@ -41,8 +42,8 @@ class ContractionService:
         """
         直近N時間の陣痛統計を計算
         """
-        start_time = datetime.utcnow() - timedelta(hours=hours)
-        now = datetime.utcnow()
+        start_time = get_now_naive() - timedelta(hours=hours)
+        now = get_now_naive()
 
         # 期間内のすべての陣痛記録（進行中も含む）
         contractions = db.query(Contraction).filter(

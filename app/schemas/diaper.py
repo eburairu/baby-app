@@ -33,6 +33,16 @@ class DiaperUpdate(BaseModel):
     diaper_type: Optional[DiaperType] = None
     notes: Optional[str] = None
 
+    @classmethod
+    def as_form(
+        cls,
+        change_time: Optional[str] = Form(None),
+        diaper_type: Optional[DiaperType] = Form(None),
+        notes: Optional[str] = Form(None),
+    ):
+        ct = datetime.fromisoformat(change_time) if change_time else None
+        return cls(change_time=ct, diaper_type=diaper_type, notes=notes)
+
 
 class DiaperResponse(BaseModel):
     """おむつ交換記録レスポンススキーマ"""

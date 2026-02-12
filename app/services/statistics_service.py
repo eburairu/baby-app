@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from app.utils.time import get_now_naive
 
 from app.models.feeding import Feeding
 from app.models.sleep import Sleep
@@ -15,7 +16,7 @@ class StatisticsService:
     @staticmethod
     def get_feeding_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """授乳統計を取得"""
-        start_date = datetime.utcnow() - timedelta(days=days)
+        start_date = get_now_naive() - timedelta(days=days)
 
         # 期間内の授乳回数
         feeding_count = db.query(func.count(Feeding.id)).filter(
@@ -39,8 +40,8 @@ class StatisticsService:
     @staticmethod
     def get_sleep_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """睡眠統計を取得"""
-        start_date = datetime.utcnow() - timedelta(days=days)
-        now = datetime.utcnow()
+        start_date = get_now_naive() - timedelta(days=days)
+        now = get_now_naive()
 
         # 期間内のすべての睡眠記録
         sleeps = db.query(Sleep).filter(
@@ -70,7 +71,7 @@ class StatisticsService:
     @staticmethod
     def get_diaper_stats(db: Session, baby_id: int, days: int = 7) -> dict:
         """おむつ交換統計を取得"""
-        start_date = datetime.utcnow() - timedelta(days=days)
+        start_date = get_now_naive() - timedelta(days=days)
 
         diaper_count = db.query(func.count(Diaper.id)).filter(
             Diaper.baby_id == baby_id,
