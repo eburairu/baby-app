@@ -111,6 +111,16 @@ def test_user(db):
 
 
 @pytest.fixture
+def test_family(db):
+    """テスト用の家族を作成して返す。"""
+    family = Family(name="テスト家族", invite_code="TEST1234")
+    db.add(family)
+    db.commit()
+    db.refresh(family)
+    return family
+
+
+@pytest.fixture
 def test_baby(db, test_user):
     """テスト用の赤ちゃんを作成して返す。
 

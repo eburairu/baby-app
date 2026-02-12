@@ -1,4 +1,5 @@
 """権限サービス"""
+from typing import Dict, List
 from sqlalchemy.orm import Session
 from app.models.baby_permission import BabyPermission
 from app.models.family_user import FamilyUser
@@ -86,5 +87,50 @@ class PermissionService:
                     can_view=can_view
                 )
                 db.add(new_permission)
-        
+
         db.commit()
+
+    @staticmethod
+    def get_user_permissions_batch(
+        db: Session,
+        user_id: int,
+        baby_ids: List[int],
+        family_id: int,
+        record_type: str = "basic_info"
+    ) -> Dict[int, bool]:
+        """複数の赤ちゃんの権限を一括取得
+
+        Args:
+            db: データベースセッション
+            user_id: ユーザーID
+            baby_ids: 赤ちゃんIDのリスト
+            family_id: 家族ID
+            record_type: 記録タイプ
+
+        Returns:
+            {baby_id: can_view} の辞書
+        """
+        if not baby_ids:
+            return {}
+
+        # 1. 管理者チェック（1回のクエリ）
+        fu = db.query(FamilyUser).filter(
+            FamilyUser.family_id == family_id,
+            FamilyUser.user_id == user_id
+        ).first()
+
+        if fu and fu.role == "admin":
+            return {baby_id: True for baby_id in baby_ids}
+
+        # 2. 複数の権限を1回のクエリで取得
+        permissions = db.query(BabyPermission).filter(
+            BabyPermission.user_id == user_id,
+            BabyPermission.baby_id.in_(baby_ids),
+            BabyPermission.record_type == record_type
+        ).all()
+
+        # 3. 辞書化
+        perm_map = {p.baby_id: p.can_view for p in permissions}
+
+        # 4. 権限設定がない赤ちゃんはデフォルトFalse
+        return {baby_id: perm_map.get(baby_id, False) for baby_id in baby_ids}
