@@ -167,7 +167,7 @@ async def update_member_permissions(
         
     for key, _ in form_data.items():
         if key.startswith("perm_"):
-            parts = key.split("_")
+            parts = key.split("_", 2)
             if len(parts) == 3:
                 try:
                     b_id = int(parts[1])

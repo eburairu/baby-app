@@ -5,8 +5,8 @@
 - [x] **TASK-001: 統計計算サービスのバグ修正**
     - `StatisticsService.get_sleep_stats` で継続中の睡眠を考慮するよう修正。 (完了)
     - `ContractionService.get_statistics` で現在進行中の陣痛を考慮するよう修正。 (完了)
-- [ ] **TASK-002: ユニットテストの拡充**
-    - `StatisticsService` および `ContractionService` のテストコードを作成し、計算ロジックの正確性を担保する。 (進行中)
+- [x] **TASK-002: ユニットテストの拡充**
+    - `StatisticsService` および `ContractionService` のテストコードを作成し、計算ロジックの正確性を担保する。 (完了)
 
 ## フェーズ 2: バリデーションと堅牢性の向上 (Medium Priority)
 
