@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.8.3 (2026-02-12)
+
+### Bug Fixes
+
+- Add missing GET /sleeps/new endpoint and improve error handling
+  ([`b0cd3ff`](https://github.com/eburairu/baby-app/commit/b0cd3ff9272d3a86df0bed1a14e7eb713a2d317f))
+
+
 ## v1.8.2 (2026-02-12)
 
 ### Performance Improvements
