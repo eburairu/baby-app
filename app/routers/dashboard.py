@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)
-async def dashboard(
+def dashboard(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -68,7 +68,7 @@ async def dashboard(
 
 
 @router.get("/stats", response_class=HTMLResponse)
-async def dashboard_stats(
+def dashboard_stats(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
