@@ -7,11 +7,13 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby, check_record_permission
+from app.dependencies import get_current_user, get_current_baby, get_current_family, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
+from app.models.family import Family
 from app.models.feeding import Feeding, FeedingType
 from app.schemas.feeding import FeedingResponse, FeedingCreate, FeedingUpdate
+from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/feedings", tags=["feedings"])
 
@@ -21,6 +23,7 @@ async def list_feedings(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("feeding"))
 ):
@@ -29,9 +32,23 @@ async def list_feedings(
         Feeding.baby_id == baby.id
     ).order_by(Feeding.feeding_time.desc()).limit(50).all()
 
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     response = templates.TemplateResponse(
         "feeding/list.html",
-        {"request": request, "user": user, "baby": baby, "feedings": feedings}
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "feedings": feedings,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
+        }
     )
 
     # 選択された赤ちゃんIDをクッキーに保存
@@ -48,11 +65,20 @@ async def list_feedings(
 @router.get("/new", response_class=HTMLResponse)
 async def new_feeding_form(
     request: Request,
+    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("feeding"))
 ):
     """新規授乳記録フォーム"""
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     return templates.TemplateResponse(
         "feeding/form.html",
         {
@@ -60,7 +86,9 @@ async def new_feeding_form(
             "user": user,
             "baby": baby,
             "feeding": None,
-            "feeding_types": FeedingType
+            "feeding_types": FeedingType,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
         }
     )
 

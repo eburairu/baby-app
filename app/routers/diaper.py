@@ -7,11 +7,13 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby, check_record_permission
+from app.dependencies import get_current_user, get_current_baby, get_current_family, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
+from app.models.family import Family
 from app.models.diaper import Diaper, DiaperType
 from app.schemas.diaper import DiaperCreate, DiaperUpdate
+from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/diapers", tags=["diapers"])
 
@@ -21,6 +23,7 @@ async def list_diapers(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("diaper"))
 ):
@@ -29,9 +32,23 @@ async def list_diapers(
         Diaper.baby_id == baby.id
     ).order_by(Diaper.change_time.desc()).limit(50).all()
 
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     response = templates.TemplateResponse(
         "diaper/list.html",
-        {"request": request, "user": user, "baby": baby, "diapers": diapers}
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "diapers": diapers,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
+        }
     )
     # 選択された赤ちゃんIDをクッキーに保存
     response.set_cookie(
@@ -84,11 +101,20 @@ async def quick_diaper(
 @router.get("/new", response_class=HTMLResponse)
 async def new_diaper_form(
     request: Request,
+    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("diaper"))
 ):
     """新規おむつ交換記録フォーム"""
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     return templates.TemplateResponse(
         "diaper/form.html",
         {
@@ -96,7 +122,9 @@ async def new_diaper_form(
             "user": user,
             "baby": baby,
             "diaper": None,
-            "diaper_types": DiaperType
+            "diaper_types": DiaperType,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
         }
     )
 

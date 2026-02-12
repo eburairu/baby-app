@@ -7,11 +7,13 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby, check_record_permission
+from app.dependencies import get_current_user, get_current_baby, get_current_family, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
+from app.models.family import Family
 from app.models.sleep import Sleep
 from app.schemas.sleep import SleepCreate, SleepUpdate
+from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/sleeps", tags=["sleeps"])
 
@@ -21,6 +23,7 @@ async def list_sleeps(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("sleep"))
 ):
@@ -35,6 +38,13 @@ async def list_sleeps(
         Sleep.end_time == None
     ).first()
 
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     response = templates.TemplateResponse(
         "sleep/list.html",
         {
@@ -42,7 +52,9 @@ async def list_sleeps(
             "user": user,
             "baby": baby,
             "sleeps": sleeps,
-            "ongoing_sleep": ongoing_sleep
+            "ongoing_sleep": ongoing_sleep,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
         }
     )
     # 選択された赤ちゃんIDをクッキーに保存
@@ -59,18 +71,29 @@ async def list_sleeps(
 @router.get("/new", response_class=HTMLResponse)
 async def new_sleep_form(
     request: Request,
+    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("sleep"))
 ):
     """新規睡眠記録フォーム"""
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     return templates.TemplateResponse(
         "sleep/form.html",
         {
             "request": request,
             "user": user,
             "baby": baby,
-            "sleep": None
+            "sleep": None,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
         }
     )
 

@@ -5,12 +5,14 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_baby, check_record_permission
+from app.dependencies import get_current_user, get_current_baby, get_current_family, check_record_permission
 from app.utils.templates import templates
 from app.models.user import User
 from app.models.baby import Baby
+from app.models.family import Family
 from app.models.schedule import Schedule
 from app.schemas.schedule import ScheduleCreate, ScheduleUpdate
+from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/schedules", tags=["schedules"])
 
@@ -20,6 +22,7 @@ async def list_schedules(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("schedule"))
 ):
@@ -28,9 +31,23 @@ async def list_schedules(
         Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
 
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     response = templates.TemplateResponse(
         "schedule/list.html",
-        {"request": request, "user": user, "baby": baby, "schedules": schedules}
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "schedules": schedules,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
+        }
     )
 
     # 選択された赤ちゃんIDをクッキーに保存
@@ -47,14 +64,30 @@ async def list_schedules(
 @router.get("/new", response_class=HTMLResponse)
 async def new_schedule_form(
     request: Request,
+    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("schedule"))
 ):
     """新規スケジュールフォーム"""
+    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
     return templates.TemplateResponse(
         "schedule/form.html",
-        {"request": request, "user": user, "baby": baby, "schedule": None}
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "schedule": None,
+            "viewable_babies": viewable_babies,
+            "current_baby": baby
+        }
     )
 
 
