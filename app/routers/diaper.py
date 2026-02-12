@@ -11,7 +11,7 @@ from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.diaper import Diaper, DiaperType
-from app.schemas.diaper import DiaperCreate
+from app.schemas.diaper import DiaperCreate, DiaperUpdate
 
 router = APIRouter(prefix="/diapers", tags=["diapers"])
 templates = Jinja2Templates(directory="app/templates")
@@ -113,6 +113,77 @@ async def create_diaper(
         return templates.TemplateResponse(
             "diaper/item.html",
             {"request": request, "diaper": new_diaper}
+        )
+
+    diapers = db.query(Diaper).filter(
+        Diaper.baby_id == baby.id
+    ).order_by(Diaper.change_time.desc()).limit(50).all()
+
+    return templates.TemplateResponse(
+        "diaper/list.html",
+        {"request": request, "user": user, "baby": baby, "diapers": diapers}
+    )
+
+
+@router.get("/{diaper_id}/edit", response_class=HTMLResponse)
+async def edit_diaper_form(
+    request: Request,
+    diaper_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
+):
+    """おむつ交換記録編集フォーム"""
+    diaper = db.query(Diaper).filter(
+        Diaper.id == diaper_id,
+        Diaper.baby_id == baby.id
+    ).first()
+
+    if not diaper:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    return templates.TemplateResponse(
+        "diaper/form.html",
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "diaper": diaper,
+            "diaper_types": DiaperType
+        }
+    )
+
+
+@router.post("/{diaper_id}", response_class=HTMLResponse)
+async def update_diaper(
+    request: Request,
+    diaper_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    form_data: DiaperUpdate = Depends(DiaperUpdate.as_form)
+):
+    """おむつ交換記録更新"""
+    diaper = db.query(Diaper).filter(
+        Diaper.id == diaper_id,
+        Diaper.baby_id == baby.id
+    ).first()
+
+    if not diaper:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    # 更新データを適用
+    update_data = form_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(diaper, key, value)
+
+    db.commit()
+    db.refresh(diaper)
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            "diaper/item.html",
+            {"request": request, "diaper": diaper}
         )
 
     diapers = db.query(Diaper).filter(

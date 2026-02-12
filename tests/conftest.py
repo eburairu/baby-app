@@ -54,16 +54,12 @@ def db():
         yield session
     finally:
         session.close()
-        # テーブル削除（テスト間の分離）
-        if str(TEST_DATABASE_URL).startswith("sqlite"):
-            Base.metadata.drop_all(bind=_engine)
-        else:
-            # PostgreSQL用
-            with _engine.connect() as conn:
-                conn.execute(text(
-                    "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-                ))
-                conn.commit()
+        # テーブル削除(テスト間の分離) - PostgreSQL用スキーマリセット
+        with _engine.connect() as conn:
+            conn.execute(text(
+                "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+            ))
+            conn.commit()
 
 
 import pytest_asyncio

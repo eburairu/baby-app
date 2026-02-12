@@ -64,6 +64,9 @@
         {% endif %}
     </div>
 
+    <!-- 編集フォーム用コンテナ -->
+    <div id="form-container"></div>
+
     <!-- 記録一覧（自動更新） -->
     <div id="contraction-list-container" hx-get="/contractions/list" hx-trigger="every 5s" hx-swap="innerHTML" data-no-loading>
         {% include "contraction/list.html" %}

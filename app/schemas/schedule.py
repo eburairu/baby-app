@@ -36,6 +36,22 @@ class ScheduleUpdate(BaseModel):
     scheduled_time: Optional[datetime] = None
     is_completed: Optional[bool] = None
 
+    @classmethod
+    def as_form(
+        cls,
+        title: Optional[str] = Form(None),
+        description: Optional[str] = Form(None),
+        scheduled_time: Optional[str] = Form(None),
+        is_completed: Optional[bool] = Form(None),
+    ):
+        st = datetime.fromisoformat(scheduled_time) if scheduled_time else None
+        return cls(
+            title=title,
+            description=description,
+            scheduled_time=st,
+            is_completed=is_completed
+        )
+
 
 class ScheduleResponse(BaseModel):
     """スケジュールレスポンススキーマ"""

@@ -11,7 +11,7 @@ from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.sleep import Sleep
-from app.schemas.sleep import SleepCreate
+from app.schemas.sleep import SleepCreate, SleepUpdate
 
 router = APIRouter(prefix="/sleeps", tags=["sleeps"])
 templates = Jinja2Templates(directory="app/templates")
@@ -162,6 +162,87 @@ async def create_sleep(
         return templates.TemplateResponse(
             "sleep/item.html",
             {"request": request, "sleep": new_sleep}
+        )
+
+    sleeps = db.query(Sleep).filter(
+        Sleep.baby_id == baby.id
+    ).order_by(Sleep.start_time.desc()).limit(50).all()
+
+    ongoing_sleep = db.query(Sleep).filter(
+        Sleep.baby_id == baby.id,
+        Sleep.end_time == None
+    ).first()
+
+    return templates.TemplateResponse(
+        "sleep/list.html",
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "sleeps": sleeps,
+            "ongoing_sleep": ongoing_sleep
+        }
+    )
+
+
+@router.get("/{sleep_id}/edit", response_class=HTMLResponse)
+async def edit_sleep_form(
+    request: Request,
+    sleep_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
+):
+    """睡眠記録編集フォーム"""
+    sleep = db.query(Sleep).filter(
+        Sleep.id == sleep_id,
+        Sleep.baby_id == baby.id
+    ).first()
+
+    if not sleep:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    return templates.TemplateResponse(
+        "sleep/form.html",
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "sleep": sleep
+        }
+    )
+
+
+@router.post("/{sleep_id}", response_class=HTMLResponse)
+async def update_sleep(
+    request: Request,
+    sleep_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    form_data: SleepUpdate = Depends(SleepUpdate.as_form)
+):
+    """睡眠記録更新"""
+    sleep = db.query(Sleep).filter(
+        Sleep.id == sleep_id,
+        Sleep.baby_id == baby.id
+    ).first()
+
+    if not sleep:
+        raise HTTPException(status_code=404, detail="記録が見つかりません")
+
+    # 更新データを適用
+    update_data = form_data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(sleep, key, value)
+
+    db.commit()
+    db.refresh(sleep)
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse(
+            "sleep/item.html",
+            {"request": request, "sleep": sleep}
         )
 
     sleeps = db.query(Sleep).filter(

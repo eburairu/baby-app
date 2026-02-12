@@ -33,15 +33,25 @@
             {% endif %}
         </div>
 
-        <!-- 削除ボタン -->
-        <button
-            hx-delete="/schedules/{{ schedule.id }}"
-            hx-confirm="このスケジュールを削除しますか？"
-            hx-target="#schedule-{{ schedule.id }}"
-            hx-swap="outerHTML"
-            class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-        >
-            削除
-        </button>
+        <!-- 操作ボタン -->
+        <div class="flex gap-2">
+            <button
+                hx-get="/schedules/{{ schedule.id }}/edit"
+                hx-target="#form-container"
+                hx-swap="innerHTML"
+                class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+                編集
+            </button>
+            <button
+                hx-delete="/schedules/{{ schedule.id }}"
+                hx-confirm="このスケジュールを削除しますか？"
+                hx-target="#schedule-{{ schedule.id }}"
+                hx-swap="outerHTML"
+                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+                削除
+            </button>
+        </div>
     </div>
 </div>
