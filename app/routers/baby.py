@@ -3,14 +3,71 @@ from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import date
+from typing import List
 
 from app.database import get_db
-from app.utils.templates import templates
 from app.models.baby import Baby
+from app.models.family import Family
 from app.dependencies import get_current_user, get_current_family, admin_required
+from app.services.permission_service import PermissionService
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/babies", tags=["baby"])
 
+
+# ===== レスポンススキーマ =====
+
+class BabyResponse(BaseModel):
+    """赤ちゃん情報レスポンス"""
+    id: int
+    name: str
+    birthday: date | None = None
+    due_date: date | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class BabiesListResponse(BaseModel):
+    """赤ちゃん一覧レスポンス"""
+    babies: List[BabyResponse]
+    family_id: int
+    family_name: str
+
+
+# ===== JSON API エンドポイント =====
+
+@router.get("", response_model=BabiesListResponse)
+async def list_babies(
+    request: Request,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user),
+    family: Family = Depends(get_current_family)
+):
+    """
+    赤ちゃん一覧を取得（JSON対応）
+
+    フロントエンドの赤ちゃんセレクター用
+    """
+    # JSONリクエストのみ対応（HTMLは不要）
+    if not wants_json(request):
+        raise HTTPException(status_code=406, detail="JSON only endpoint")
+
+    # 閲覧可能な赤ちゃんのみに絞り込む
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    visible_babies = [b for b in family.babies if perms_map.get(b.id, False)]
+
+    return BabiesListResponse(
+        babies=[BabyResponse.model_validate(b) for b in visible_babies],
+        family_id=family.id,
+        family_name=family.name
+    )
+
+
+# ===== HTML エンドポイント =====
 
 @router.post("/{baby_id}/delete")
 async def delete_baby(
