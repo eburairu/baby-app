@@ -205,6 +205,7 @@
             <p class="mb-4 text-gray-600 dark:text-gray-300 text-center">赤ちゃんが生まれた日を入力してください。</p>
             
             <form action="/babies/{{ baby.id }}/born" method="post" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <div>
                     <label for="birthday-input" class="block text-sm font-medium mb-1">誕生日</label>
                     <input type="date" id="birthday-input" name="birthday" required
