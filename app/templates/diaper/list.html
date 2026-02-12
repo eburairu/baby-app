@@ -17,6 +17,7 @@
         <h2 class="text-lg font-semibold mb-4">ワンタップ記録</h2>
         <div class="grid grid-cols-3 gap-4">
             <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <input type="hidden" name="diaper_type" value="wet">
                 <button type="submit"
                     class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">
@@ -24,6 +25,7 @@
                 </button>
             </form>
             <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <input type="hidden" name="diaper_type" value="dirty">
                 <button type="submit"
                     class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">
@@ -31,6 +33,7 @@
                 </button>
             </form>
             <form hx-post="/diapers/quick" hx-target="#diaper-list" hx-swap="afterbegin">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <input type="hidden" name="diaper_type" value="both">
                 <button type="submit"
                     class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-6 rounded-lg transition duration-200">

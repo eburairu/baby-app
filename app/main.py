@@ -10,6 +10,7 @@ from app.config import settings
 from app.routers import auth, dashboard, feeding, sleep, diaper, growth, contraction, schedule, family, baby
 from app.dependencies import get_current_user_optional, AuthenticationRequired, PermissionDenied
 from app.models.user import User
+from app.middleware.csrf import CSRFMiddleware
 
 # FastAPIアプリケーション作成
 app = FastAPI(
@@ -18,6 +19,9 @@ app = FastAPI(
     version="1.0.0",
     default_response_class=JSONResponse,
 )
+
+# CSRF Middleware
+app.add_middleware(CSRFMiddleware)
 
 templates = Jinja2Templates(directory="app/templates")
 
