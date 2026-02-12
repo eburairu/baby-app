@@ -1,6 +1,6 @@
 """スケジュール管理ルーター"""
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -27,12 +27,37 @@ async def list_schedules(
         Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "schedule/list.html",
         {"request": request, "user": user, "baby": baby, "schedules": schedules}
     )
 
 
+    # 選択された赤ちゃんIDをクッキーに保存
+
+
+    response.set_cookie(
+
+
+        key="selected_baby_id",
+
+
+        value=str(baby.id),
+
+
+        max_age=7 * 24 * 60 * 60,
+
+
+        httponly=False,
+
+
+        samesite="lax"
+
+
+    )
+
+
+    return response
 @router.get("/new", response_class=HTMLResponse)
 async def new_schedule_form(
     request: Request,

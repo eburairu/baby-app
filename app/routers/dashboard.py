@@ -1,5 +1,5 @@
 """ダッシュボードルーター"""
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from datetime import date
@@ -48,7 +48,7 @@ def dashboard(
             "days": current_day
         }
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "dashboard.html",
         {
             "request": request,
@@ -64,6 +64,15 @@ def dashboard(
             "prenatal_info": prenatal_info
         }
     )
+    # 選択された赤ちゃんIDをクッキーに保存（7日間有効）
+    response.set_cookie(
+        key="selected_baby_id",
+        value=str(baby.id),
+        max_age=7 * 24 * 60 * 60,  # 7日間
+        httponly=False,  # JavaScriptからもアクセス可能
+        samesite="lax"
+    )
+    return response
 
 
 @router.get("/stats", response_class=HTMLResponse)

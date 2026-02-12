@@ -1,7 +1,7 @@
 """授乳記録ルーター"""
 from datetime import datetime
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -28,12 +28,37 @@ async def list_feedings(
         Feeding.baby_id == baby.id
     ).order_by(Feeding.feeding_time.desc()).limit(50).all()
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "feeding/list.html",
         {"request": request, "user": user, "baby": baby, "feedings": feedings}
     )
 
 
+    # 選択された赤ちゃんIDをクッキーに保存
+
+
+    response.set_cookie(
+
+
+        key="selected_baby_id",
+
+
+        value=str(baby.id),
+
+
+        max_age=7 * 24 * 60 * 60,
+
+
+        httponly=False,
+
+
+        samesite="lax"
+
+
+    )
+
+
+    return response
 @router.get("/new", response_class=HTMLResponse)
 async def new_feeding_form(
     request: Request,

@@ -1,6 +1,6 @@
 """睡眠記録ルーター"""
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from app.utils.time import get_now_naive
@@ -34,7 +34,7 @@ async def list_sleeps(
         Sleep.end_time == None
     ).first()
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "sleep/list.html",
         {
             "request": request,
@@ -44,6 +44,15 @@ async def list_sleeps(
             "ongoing_sleep": ongoing_sleep
         }
     )
+    # 選択された赤ちゃんIDをクッキーに保存
+    response.set_cookie(
+        key="selected_baby_id",
+        value=str(baby.id),
+        max_age=7 * 24 * 60 * 60,
+        httponly=False,
+        samesite="lax"
+    )
+    return response
 
 
 @router.post("/start", response_class=HTMLResponse)
