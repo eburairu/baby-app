@@ -78,7 +78,7 @@
 
     <!-- 統計カード（自動更新） -->
     <div class="relative">
-        <div id="stats-container" hx-get="/dashboard/stats?baby_id={{ baby.id }}" hx-trigger="every 30s" hx-swap="innerHTML" hx-indicator="#stats-indicator">
+        <div id="stats-container" hx-get="/dashboard/stats?baby_id={{ baby.id }}" hx-trigger="every 30s" hx-swap="innerHTML" hx-indicator="#stats-indicator" data-no-loading>
             {% include "components/stats_card.html" %}
         </div>
         <div id="stats-indicator" class="htmx-indicator absolute top-0 right-0 p-2">

@@ -65,7 +65,7 @@
     </div>
 
     <!-- 記録一覧（自動更新） -->
-    <div id="contraction-list-container" hx-get="/contractions/list" hx-trigger="every 5s" hx-swap="innerHTML">
+    <div id="contraction-list-container" hx-get="/contractions/list" hx-trigger="every 5s" hx-swap="innerHTML" data-no-loading>
         {% include "contraction/list.html" %}
     </div>
 </div>
