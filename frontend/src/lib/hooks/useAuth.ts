@@ -37,15 +37,16 @@ export function useAuth() {
   const { user, setUser, setLoading, setError, logout: clearAuth } = useAuthStore();
 
   // 現在のユーザー情報を取得
-  const { data, error, mutate } = useSWR<User>(
+  const { data, error, mutate } = useSWR<User | null>(
     AuthEndpoints.me,
     async (url) => {
       try {
-        return await apiGet<User>(url);
+        // skipAuth: true でリダイレクトを抑制し、レイアウトに委ねる
+        return await apiGet<User>(url, { skipAuth: true });
       } catch (err) {
         if (err instanceof APIError && err.status === 401) {
-          // 未認証の場合は null を返す
-          return null as any;
+          // 未認証の場合は null を返す（isLoading を false にするため）
+          return null;
         }
         throw err;
       }
@@ -61,6 +62,9 @@ export function useAuth() {
   useEffect(() => {
     if (data) {
       setUser(data);
+    } else if (data === null) {
+      // 未認証（401）の場合はストアもクリア
+      setUser(null);
     } else if (error) {
       setError(error.message);
     }
@@ -145,7 +149,8 @@ export function useAuth() {
 
   return {
     user,
-    isLoading: !data && !error,
+    // data === undefined はまだフェッチ中。null は未認証（401）。
+    isLoading: data === undefined && error === undefined,
     error: useAuthStore.getState().error,
     login,
     logout,

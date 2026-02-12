@@ -32,13 +32,12 @@ origins = [
 ]
 
 # Render環境変数や設定からオリジンを追加
-if settings.ENVIRONMENT == "production":
-    # 必要に応じてFrontendのURLを環境変数から取得して追加
-    pass
+if settings.FRONTEND_URL:
+    origins.append(settings.FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # 開発中は一旦全許可、本番では制限推奨
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

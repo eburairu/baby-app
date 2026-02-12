@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     SYSTEM_INVITE_CODE: str = "default-invite-code"
     ENVIRONMENT: str = "development"
     TIMEZONE: str = "Asia/Tokyo"
+    FRONTEND_URL: str = ""
 
     class Config:
         env_file = ".env"
