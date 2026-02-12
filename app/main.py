@@ -38,7 +38,7 @@ async def permission_denied_handler(request: Request, exc: PermissionDenied):
         try:
             from sqlalchemy.orm import Session
             from app.database import SessionLocal
-            from app.models.user_session import UserSession
+            from app.models.session import UserSession  # 正しいインポートパス
             from app.models.user import User
             from app.services.permission_service import PermissionService
 
@@ -75,7 +75,11 @@ async def permission_denied_handler(request: Request, exc: PermissionDenied):
                                 return RedirectResponse(url=redirect_url, status_code=303)
                 finally:
                     db.close()
-        except Exception:
+        except Exception as e:
+            # デバッグ用にログ出力
+            print(f"[DEBUG] Permission redirect failed: {e}")
+            import traceback
+            traceback.print_exc()
             pass  # エラーが発生した場合はデフォルト処理へ
 
     # 既存のロジック（その他のエラーケース）
