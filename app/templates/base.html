@@ -24,6 +24,7 @@
 
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <meta name="csrf-token" content="{{ request.state.csrf_token }}">
 
     <!-- カスタムCSS -->
     <link rel="stylesheet" href="/static/css/custom.css">
@@ -65,6 +66,12 @@
 
     <script>
         // ダークモード切り替え
+        // HTMX CSRF Token Injection
+        document.body.addEventListener("htmx:configRequest", function(evt) {
+            const token = document.querySelector("meta[name=\"csrf-token\"]").content;
+            evt.detail.headers["X-CSRF-Token"] = token;
+        });
+
         function toggleTheme() {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
