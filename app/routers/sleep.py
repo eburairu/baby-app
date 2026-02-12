@@ -56,6 +56,25 @@ async def list_sleeps(
     return response
 
 
+@router.get("/new", response_class=HTMLResponse)
+async def new_sleep_form(
+    request: Request,
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
+):
+    """新規睡眠記録フォーム"""
+    return templates.TemplateResponse(
+        "sleep/form.html",
+        {
+            "request": request,
+            "user": user,
+            "baby": baby,
+            "sleep": None
+        }
+    )
+
+
 @router.post("/start", response_class=HTMLResponse)
 async def start_sleep(
     request: Request,

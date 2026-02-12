@@ -1,7 +1,7 @@
 """睡眠記録スキーマ"""
 from datetime import datetime
 from typing import Optional
-from fastapi import Form
+from fastapi import Form, HTTPException
 from pydantic import BaseModel, Field
 
 
@@ -21,9 +21,12 @@ class SleepCreate(BaseModel):
         try:
             st = datetime.fromisoformat(start_time)
             et = datetime.fromisoformat(end_time) if end_time else None
-        except ValueError:
-            st, et = start_time, end_time
-            
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"日時の形式が正しくありません: {e}"
+            )
+
         return cls(start_time=st, end_time=et, notes=notes)
 
 
@@ -40,8 +43,14 @@ class SleepUpdate(BaseModel):
         end_time: Optional[str] = Form(None),
         notes: Optional[str] = Form(None),
     ):
-        st = datetime.fromisoformat(start_time) if start_time else None
-        et = datetime.fromisoformat(end_time) if end_time else None
+        try:
+            st = datetime.fromisoformat(start_time) if start_time else None
+            et = datetime.fromisoformat(end_time) if end_time else None
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"日時の形式が正しくありません: {e}"
+            )
         return cls(start_time=st, end_time=et, notes=notes)
 
 
