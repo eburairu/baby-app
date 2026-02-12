@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.5.2 (2026-02-12)
+
+### Bug Fixes
+
+- Resolve baby_id selection issue for multi-baby families
+  ([`57bcdf8`](https://github.com/eburairu/baby-app/commit/57bcdf834047c1e799ac999a0f203ef279a14d65))
+
+### Build System
+
+- Add Docker support for development environment
+  ([`4b4242c`](https://github.com/eburairu/baby-app/commit/4b4242c484c2afd55262ea7654c5d2c1b693c822))
+
+
 ## v1.5.1 (2026-02-12)
 
 ### Bug Fixes
