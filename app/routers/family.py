@@ -1,8 +1,8 @@
-"""家族管理ルーター"""
-from fastapi import APIRouter, Depends, Form, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+"""家族管理ルーター（JSON API専用）"""
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import List
 
 from app.database import get_db
 from app.models.user import User
@@ -27,110 +27,125 @@ class FamilyResponse(BaseModel):
         from_attributes = True
 
 
+class FamilyCreateRequest(BaseModel):
+    """家族作成リクエスト"""
+    name: str
+
+
+class FamilyJoinRequest(BaseModel):
+    """家族参加リクエスト"""
+    invite_code: str
+
+
+class MemberResponse(BaseModel):
+    """メンバー情報レスポンス"""
+    id: int
+    username: str
+    role: str
+
+    class Config:
+        from_attributes = True
+
+
+class PermissionUpdateRequest(BaseModel):
+    """権限更新リクエスト"""
+    baby_id: int
+    permissions: dict[str, bool]
+
+
 # ===== JSON API エンドポイント =====
 
 @router.get("/me", response_model=FamilyResponse)
 async def get_my_family(
-    request: Request,
     family: Family = Depends(get_current_family)
 ):
     """
-    現在の家族情報を取得（JSON対応）
+    現在の家族情報を取得（JSON専用）
 
     フロントエンド用
     """
-    # JSONリクエストのみ対応
-    if not wants_json(request):
-        raise HTTPException(status_code=406, detail="JSON only endpoint")
+    return FamilyResponse.model_validate(family)
+
+
+@router.post("", response_model=FamilyResponse)
+async def create_family(
+    family_data: FamilyCreateRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """家族を新規作成（JSON専用）"""
+    family = FamilyService.create_family(db, user, family_data.name)
+    return FamilyResponse.model_validate(family)
+
+
+@router.post("/join", response_model=FamilyResponse)
+async def join_family(
+    join_data: FamilyJoinRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """招待コードで家族に参加（JSON専用）"""
+    family = FamilyService.join_family(db, user, join_data.invite_code.upper())
+    if not family:
+        raise HTTPException(status_code=400, detail="無効な招待コードです")
 
     return FamilyResponse.model_validate(family)
 
 
-# ===== HTML エンドポイント =====
-
-@router.get("/setup", response_class=HTMLResponse)
-async def family_setup_page(
-    request: Request,
-    user: User = Depends(get_current_user)
-):
-    """家族の作成または参加を選択するページ"""
-    if user.families:
-        return RedirectResponse(url="/dashboard", status_code=303)
-    
-    return templates.TemplateResponse(
-        "family/setup.html",
-        {"request": request, "user": user}
-    )
-
-
-@router.post("/create")
-async def create_family(
-    name: str = Form(...),
+@router.get("/members", response_model=List[MemberResponse])
+async def list_members(
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
+    family: Family = Depends(get_current_family)
 ):
-    """家族を新規作成"""
-    FamilyService.create_family(db, user, name)
-    return RedirectResponse(url="/dashboard", status_code=303)
+    """家族メンバー一覧を取得（JSON専用）"""
+    members = []
+    for fu in family.family_users:
+        members.append({
+            "id": fu.user.id,
+            "username": fu.user.username,
+            "role": fu.role
+        })
+    return members
 
 
-@router.post("/join")
-async def join_family(
-    request: Request,
-    invite_code: str = Form(...),
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
-):
-    """招待コードで家族に参加"""
-    family = FamilyService.join_family(db, user, invite_code.upper())
-    if not family:
-        # エラー表示（簡易的にクエリパラメータで）
-        return RedirectResponse(url="/families/setup?error=invalid_code", status_code=303)
-    
-    return RedirectResponse(url="/dashboard", status_code=303)
-
-
-@router.get("/settings", response_class=HTMLResponse)
-async def family_settings(
-    request: Request,
+@router.post("/members/{target_user_id}/permissions", response_model=dict)
+async def update_member_permissions(
+    target_user_id: int,
+    permissions_data: List[PermissionUpdateRequest],
     user: User = Depends(get_current_user),
-    family = Depends(get_current_family),
+    family: Family = Depends(get_current_family),
     db: Session = Depends(get_db)
 ):
-    """家族設定画面（招待コードの確認など）"""
-    is_admin = FamilyService.is_admin(db, user.id, family.id)
-    
-    # 閲覧可能な赤ちゃんのみを抽出
-    if is_admin:
-        display_babies = family.babies
-    else:
-        display_babies = [
-            b for b in family.babies 
-            if PermissionService.can_view_baby_record(db, user.id, family.id, b.id, "basic_info")
-        ]
+    """メンバーの権限設定を更新（JSON専用）"""
+    # 管理者チェック
+    if not FamilyService.is_admin(db, user.id, family.id):
+        raise HTTPException(status_code=403, detail="管理者権限が必要です")
 
-    return templates.TemplateResponse(
-        "family/settings.html",
-        {
-            "request": request,
-            "user": user,
-            "family": family,
-            "is_admin": is_admin,
-            "babies": display_babies,
-            "members": family.members
-        }
-    )
+    # 対象ユーザーが同じ家族かチェック
+    target_fu = db.query(FamilyUser).filter(
+        FamilyUser.family_id == family.id,
+        FamilyUser.user_id == target_user_id
+    ).first()
+    if not target_fu:
+        raise HTTPException(status_code=404, detail="メンバーが見つかりません")
+
+    # 更新実行
+    for perm_data in permissions_data:
+        PermissionService.update_permissions(
+            db, target_user_id, perm_data.baby_id, perm_data.permissions
+        )
+
+    return {"success": True, "message": "権限を更新しました"}
 
 
-@router.get("/members/{target_user_id}/permissions", response_class=HTMLResponse)
-async def member_permissions_page(
-    request: Request,
+@router.get("/members/{target_user_id}/permissions", response_model=dict)
+async def get_member_permissions(
     target_user_id: int,
     user: User = Depends(get_current_user),
-    family = Depends(get_current_family),
+    family: Family = Depends(get_current_family),
     db: Session = Depends(get_db)
 ):
-    """メンバーの権限設定ページ"""
+    """メンバーの権限設定を取得（JSON専用）"""
     # 管理者チェック
     if not FamilyService.is_admin(db, user.id, family.id):
         raise HTTPException(status_code=403, detail="管理者権限が必要です")
@@ -146,73 +161,15 @@ async def member_permissions_page(
     # 各赤ちゃんと各記録タイプの権限状況を取得
     permissions_data = []
     for baby in family.babies:
-        perms = PermissionService.get_user_permissions(db, target_user_id, baby.id)
+        perms = PermissionService.get_user_permissions(db, target_user_id, baby.id, family.id)
         permissions_data.append({
-            "baby": baby,
+            "baby_id": baby.id,
+            "baby_name": baby.name,
             "permissions": perms
         })
 
-    return templates.TemplateResponse(
-        "family/member_permissions.html",
-        {
-            "request": request,
-            "user": user,
-            "family": family,
-            "target_user": target_fu.user,
-            "permissions_data": permissions_data,
-            "record_types": {
-                "basic_info": "基本情報・表示",
-                "feeding": "授乳",
-                "sleep": "睡眠",
-                "diaper": "おむつ",
-                "growth": "成長記録",
-                "schedule": "スケジュール",
-                "contraction": "陣痛タイマー"
-            }
-        }
-    )
-
-
-@router.post("/members/{target_user_id}/permissions")
-async def update_member_permissions(
-    target_user_id: int,
-    request: Request,
-    user: User = Depends(get_current_user),
-    family = Depends(get_current_family),
-    db: Session = Depends(get_db)
-):
-    """メンバーの権限設定を更新"""
-    # 管理者チェック
-    if not FamilyService.is_admin(db, user.id, family.id):
-        raise HTTPException(status_code=403, detail="管理者権限が必要です")
-
-    form_data = await request.form()
-    
-    # フォームデータから権限を解析
-    # キー形式: perm_{baby_id}_{record_type}
-    updates = {} # baby_id -> {record_type -> bool}
-    
-    # まず全赤ちゃん・全タイプのデフォルトをFalseに設定（チェック外れた場合のため）
-    for baby in family.babies:
-        updates[baby.id] = {
-            "feeding": False, "sleep": False, "diaper": False, 
-            "growth": False, "schedule": False, "contraction": False, "basic_info": False
-        }
-        
-    for key, _ in form_data.items():
-        if key.startswith("perm_"):
-            parts = key.split("_", 2)
-            if len(parts) == 3:
-                try:
-                    b_id = int(parts[1])
-                    r_type = parts[2]
-                    if b_id in updates:
-                        updates[b_id][r_type] = True
-                except ValueError:
-                    continue
-
-    # 更新実行
-    for b_id, perms in updates.items():
-        PermissionService.update_permissions(db, target_user_id, b_id, perms)
-
-    return RedirectResponse(url="/families/settings", status_code=303)
+    return {
+        "user_id": target_user_id,
+        "username": target_fu.user.username,
+        "permissions": permissions_data
+    }

@@ -7,6 +7,11 @@ from pydantic import BaseModel, Field
 from app.models.diaper import DiaperType
 
 
+class QuickDiaperRequest(BaseModel):
+    """ワンタップおむつ交換記録用スキーマ"""
+    diaper_type: DiaperType
+
+
 class DiaperCreate(BaseModel):
     """おむつ交換記録作成用スキーマ"""
     change_time: datetime

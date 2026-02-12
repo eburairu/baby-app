@@ -1,7 +1,6 @@
-"""スケジュール管理ルーター"""
+"""スケジュール管理ルーター（JSON API専用）"""
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Request, Form, Response
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -17,16 +16,15 @@ from app.services.permission_service import PermissionService
 router = APIRouter(prefix="/schedules", tags=["schedules"])
 
 
-@router.get("", response_model=None)
+@router.get("", response_model=ListResponse[ScheduleResponse])
 async def list_schedules(
-    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     family: Family = Depends(get_current_family),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("schedule"))
 ):
-    """スケジュール一覧ページ / スケジュール一覧API"""
+    """スケジュール一覧（JSON専用）"""
     schedules = db.query(Schedule).filter(
         Schedule.baby_id == baby.id
     ).order_by(Schedule.scheduled_time.asc()).all()
@@ -38,82 +36,22 @@ async def list_schedules(
     )
     viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
 
-    # JSON リクエストの場合
-    if wants_json(request):
-        return ListResponse(
-            items=[ScheduleResponse.model_validate(s) for s in schedules],
-            baby=BabyBasicInfo.model_validate(baby),
-            viewable_babies=[BabyBasicInfo.model_validate(b) for b in viewable_babies]
-        )
-
-    # HTML レスポンス
-    response = templates.TemplateResponse(
-        "schedule/list.html",
-        {
-            "request": request,
-            "user": user,
-            "baby": baby,
-            "schedules": schedules,
-            "viewable_babies": viewable_babies,
-            "current_baby": baby
-        }
-    )
-
-    # 選択された赤ちゃんIDをクッキーに保存
-    response.set_cookie(
-        key="selected_baby_id",
-        value=str(baby.id),
-        max_age=7 * 24 * 60 * 60,
-        httponly=False,
-        samesite="lax"
-    )
-    return response
-
-
-@router.get("/new", response_class=HTMLResponse)
-async def new_schedule_form(
-    request: Request,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-    family: Family = Depends(get_current_family),
-    baby: Baby = Depends(get_current_baby),
-    _ = Depends(check_record_permission("schedule"))
-):
-    """新規スケジュールフォーム"""
-    # 閲覧可能な赤ちゃんリストを取得（グローバルナビゲーション用）
-    baby_ids = [b.id for b in family.babies]
-    perms_map = PermissionService.get_user_permissions_batch(
-        db, user.id, baby_ids, family.id, "basic_info"
-    )
-    viewable_babies = [b for b in family.babies if perms_map.get(b.id, False)]
-
-    return templates.TemplateResponse(
-        "schedule/form.html",
-        {
-            "request": request,
-            "user": user,
-            "baby": baby,
-            "schedule": None,
-            "viewable_babies": viewable_babies,
-            "current_baby": baby
-        }
+    return ListResponse(
+        items=[ScheduleResponse.model_validate(s) for s in schedules],
+        baby=BabyBasicInfo.model_validate(baby),
+        viewable_babies=[BabyBasicInfo.model_validate(b) for b in viewable_babies]
     )
 
 
-@router.post("", response_model=None)
+@router.post("", response_model=ScheduleResponse)
 async def create_schedule(
-    request: Request,
+    schedule_data: ScheduleCreate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    data: ScheduleCreate = None,
-    form_data: ScheduleCreate = Depends(ScheduleCreate.as_form),
     _ = Depends(check_record_permission("schedule"))
 ):
-    """スケジュール作成"""
-    # JSON または Form データを使用
-    schedule_data = data if wants_json(request) else form_data
-
+    """スケジュール作成（JSON専用）"""
     new_schedule = Schedule(
         baby_id=baby.id,
         user_id=user.id,
@@ -124,37 +62,18 @@ async def create_schedule(
     db.commit()
     db.refresh(new_schedule)
 
-    # JSON リクエストの場合
-    if wants_json(request):
-        return ScheduleResponse.model_validate(new_schedule)
-
-    # HTML レスポンス
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            "schedule/item.html",
-            {"request": request, "schedule": new_schedule}
-        )
-
-    schedules = db.query(Schedule).filter(
-        Schedule.baby_id == baby.id
-    ).order_by(Schedule.scheduled_time.asc()).all()
-
-    return templates.TemplateResponse(
-        "schedule/list.html",
-        {"request": request, "user": user, "baby": baby, "schedules": schedules}
-    )
+    return ScheduleResponse.model_validate(new_schedule)
 
 
-@router.post("/{schedule_id}/toggle", response_model=None)
+@router.post("/{schedule_id}/toggle", response_model=ScheduleResponse)
 async def toggle_schedule(
-    request: Request,
     schedule_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("schedule"))
 ):
-    """スケジュール完了/未完了切り替え"""
+    """スケジュール完了/未完了切り替え（JSON専用）"""
     schedule = db.query(Schedule).filter(
         Schedule.id == schedule_id,
         Schedule.baby_id == baby.id
@@ -167,60 +86,13 @@ async def toggle_schedule(
     db.commit()
     db.refresh(schedule)
 
-    # JSON リクエストの場合
-    if wants_json(request):
-        return ScheduleResponse.model_validate(schedule)
-
-    # HTML レスポンス
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            "schedule/item.html",
-            {"request": request, "schedule": schedule}
-        )
-
-    schedules = db.query(Schedule).filter(
-        Schedule.baby_id == baby.id
-    ).order_by(Schedule.scheduled_time.asc()).all()
-
-    return templates.TemplateResponse(
-        "schedule/list.html",
-        {"request": request, "user": user, "baby": baby, "schedules": schedules}
-    )
+    return ScheduleResponse.model_validate(schedule)
 
 
-@router.get("/{schedule_id}/edit", response_class=HTMLResponse)
-async def edit_schedule_form(
-    request: Request,
+@router.put("/{schedule_id}", response_model=ScheduleResponse)
+async def update_schedule(
     schedule_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby),
-    _ = Depends(check_record_permission("schedule"))
-):
-    """スケジュール編集フォーム"""
-    schedule = db.query(Schedule).filter(
-        Schedule.id == schedule_id,
-        Schedule.baby_id == baby.id
-    ).first()
-
-    if not schedule:
-        raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
-
-    return templates.TemplateResponse(
-        "schedule/form.html",
-        {
-            "request": request,
-            "user": user,
-            "baby": baby,
-            "schedule": schedule
-        }
-    )
-
-
-@router.put("/{schedule_id}", response_model=None)
-async def update_schedule_json(
-    schedule_id: int,
-    data: ScheduleUpdate,
+    schedule_data: ScheduleUpdate,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
@@ -236,7 +108,7 @@ async def update_schedule_json(
         raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
 
     # 更新データを適用
-    update_data = data.model_dump(exclude_unset=True)
+    update_data = schedule_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(schedule, key, value)
 
@@ -246,59 +118,15 @@ async def update_schedule_json(
     return ScheduleResponse.model_validate(schedule)
 
 
-@router.post("/{schedule_id}", response_class=HTMLResponse)
-async def update_schedule(
-    request: Request,
-    schedule_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby),
-    form_data: ScheduleUpdate = Depends(ScheduleUpdate.as_form),
-    _ = Depends(check_record_permission("schedule"))
-):
-    """スケジュール更新（HTML用）"""
-    schedule = db.query(Schedule).filter(
-        Schedule.id == schedule_id,
-        Schedule.baby_id == baby.id
-    ).first()
-
-    if not schedule:
-        raise HTTPException(status_code=404, detail="スケジュールが見つかりません")
-
-    # 更新データを適用
-    update_data = form_data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(schedule, key, value)
-
-    db.commit()
-    db.refresh(schedule)
-
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            "schedule/item.html",
-            {"request": request, "schedule": schedule}
-        )
-
-    schedules = db.query(Schedule).filter(
-        Schedule.baby_id == baby.id
-    ).order_by(Schedule.scheduled_time.asc()).all()
-
-    return templates.TemplateResponse(
-        "schedule/list.html",
-        {"request": request, "user": user, "baby": baby, "schedules": schedules}
-    )
-
-
-@router.delete("/{schedule_id}", response_model=None)
+@router.delete("/{schedule_id}", response_model=dict)
 async def delete_schedule(
-    request: Request,
     schedule_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
     _ = Depends(check_record_permission("schedule"))
 ):
-    """スケジュール削除"""
+    """スケジュール削除（JSON専用）"""
     schedule = db.query(Schedule).filter(
         Schedule.id == schedule_id,
         Schedule.baby_id == baby.id
@@ -310,9 +138,4 @@ async def delete_schedule(
     db.delete(schedule)
     db.commit()
 
-    # JSON リクエストの場合
-    if wants_json(request):
-        return {"message": "削除しました"}
-
-    # HTML レスポンス
-    return ""
+    return {"success": True, "message": "削除しました"}
