@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.1 (2026-02-12)
+
+### Bug Fixes
+
+- Provide default value for SYSTEM_INVITE_CODE to prevent build failure
+  ([`bedb23b`](https://github.com/eburairu/baby-app/commit/bedb23baae1a39436b3e8e2f0de9e29e8805c0b5))
+
+
 ## v1.5.0 (2026-02-12)
 
 ### Documentation
