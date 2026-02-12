@@ -33,8 +33,11 @@ if not TEST_DATABASE_URL:
     # デフォルトでDocker ComposeのDBを指す（開発体験向上）
     TEST_DATABASE_URL = "postgresql://test_user:test_password@localhost:5433/baby_app_test"
 
-# PostgreSQL接続
-_engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
+# PostgreSQL or SQLite connection
+if "sqlite" in TEST_DATABASE_URL:
+    _engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    _engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 _TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=_engine
 )
@@ -54,12 +57,16 @@ def db():
         yield session
     finally:
         session.close()
-        # テーブル削除(テスト間の分離) - PostgreSQL用スキーマリセット
-        with _engine.connect() as conn:
-            conn.execute(text(
-                "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-            ))
-            conn.commit()
+        # テーブル削除(テスト間の分離)
+        if "sqlite" in str(_engine.url):
+            Base.metadata.drop_all(bind=_engine)
+        else:
+            # PostgreSQL用スキーマリセット
+            with _engine.connect() as conn:
+                conn.execute(text(
+                    "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+                ))
+                conn.commit()
 
 
 import pytest_asyncio
