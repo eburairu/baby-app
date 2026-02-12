@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from app.utils.templates import templates
 
 from fastapi.exceptions import RequestValidationError
 from app.config import settings
@@ -23,8 +23,6 @@ app = FastAPI(
 
 # CSRF Cookie Middleware
 app.add_middleware(CSRFCookieMiddleware)
-
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ===== エラーハンドラー =====

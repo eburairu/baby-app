@@ -1,16 +1,15 @@
 """家族管理ルーター"""
 from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.utils.templates import templates
 from app.models.user import User
 from app.dependencies import get_current_user, get_current_family, admin_required
 from app.services.family_service import FamilyService
 
 router = APIRouter(prefix="/families", tags=["family"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/setup", response_class=HTMLResponse)

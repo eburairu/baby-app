@@ -44,7 +44,13 @@ class ScheduleUpdate(BaseModel):
         scheduled_time: Optional[str] = Form(None),
         is_completed: Optional[bool] = Form(None),
     ):
-        st = datetime.fromisoformat(scheduled_time) if scheduled_time else None
+        st = None
+        if scheduled_time:
+            try:
+                st = datetime.fromisoformat(scheduled_time)
+            except ValueError:
+                st = scheduled_time
+        
         return cls(
             title=title,
             description=description,

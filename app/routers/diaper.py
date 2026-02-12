@@ -2,11 +2,11 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.utils.time import get_now_naive
 
 from app.database import get_db
+from app.utils.templates import templates
 from app.dependencies import get_current_user, get_current_baby
 from app.models.user import User
 from app.models.baby import Baby
@@ -14,7 +14,6 @@ from app.models.diaper import Diaper, DiaperType
 from app.schemas.diaper import DiaperCreate, DiaperUpdate
 
 router = APIRouter(prefix="/diapers", tags=["diapers"])
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

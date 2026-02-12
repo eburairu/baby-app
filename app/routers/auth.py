@@ -2,10 +2,10 @@
 import secrets
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.utils.templates import templates
 from typing import Optional
 from app.models.user import User
 from app.models.family import Family
@@ -16,7 +16,6 @@ from app.dependencies import get_current_user_optional
 from app.config import settings
 
 router = APIRouter(tags=["auth"])
-templates = Jinja2Templates(directory="app/templates")
 
 # Cookie設定
 COOKIE_MAX_AGE = 86400 * SESSION_MAX_AGE_DAYS
