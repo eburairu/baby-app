@@ -7,7 +7,6 @@
     <h2 class="text-2xl font-bold mb-6 text-center text-primary dark:text-blue-400">赤ちゃんの登録</h2>
     
     <form action="/babies/create" method="post">
-        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
         <div class="mb-4">
             <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="name">
                 名前

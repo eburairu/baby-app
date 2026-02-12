@@ -25,9 +25,6 @@
     <!-- htmx -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ request.state.csrf_token }}">
-
     <!-- カスタムCSS -->
     <link rel="stylesheet" href="/static/css/custom.css">
 
@@ -85,11 +82,6 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-
-        // htmx CSRFトークン設定
-        document.body.addEventListener('htmx:configRequest', function(evt) {
-            evt.detail.headers['X-CSRF-Token'] = document.querySelector('meta[name="csrf-token"]').content;
-        });
 
         // htmx エラーハンドリング
         document.body.addEventListener('htmx:responseError', function(evt) {

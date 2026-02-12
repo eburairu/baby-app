@@ -10,7 +10,6 @@
         <h3 class="text-lg font-semibold mb-3">新しい家族を作成する</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">あなたが管理者となり、他の家族を招待できるようになります。</p>
         <form action="/families/create" method="post">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <div class="mb-4">
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="family_name">
                     家族名 (例: 佐藤家)
@@ -30,7 +29,6 @@
         <h3 class="text-lg font-semibold mb-3">既存の家族に参加する</h3>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">共有された招待コードを入力してください。</p>
         <form action="/families/join" method="post">
-            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
             <div class="mb-4">
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="invite_code">
                     招待コード
