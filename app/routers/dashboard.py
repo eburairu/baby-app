@@ -32,7 +32,7 @@ def dashboard(
     ]
     
     # 現在の赤ちゃんの権限を取得
-    perms = PermissionService.get_user_permissions(db, user.id, baby.id)
+    perms = PermissionService.get_user_permissions(db, user.id, baby.id, family.id)
     
     # 権限がある項目のみ統計を取得
     feeding_stats = StatisticsService.get_feeding_stats(db, baby.id) if perms['feeding'] else None
@@ -102,7 +102,7 @@ def dashboard_stats(
     baby: Baby = Depends(get_current_baby)
 ):
     """統計カード部分（htmx自動更新用）"""
-    perms = PermissionService.get_user_permissions(db, user.id, baby.id)
+    perms = PermissionService.get_user_permissions(db, user.id, baby.id, family.id)
     
     feeding_stats = StatisticsService.get_feeding_stats(db, baby.id) if perms['feeding'] else None
     sleep_stats = StatisticsService.get_sleep_stats(db, baby.id) if perms['sleep'] else None

@@ -33,8 +33,18 @@ class PermissionService:
         return True
 
     @staticmethod
-    def get_user_permissions(db: Session, user_id: int, baby_id: int) -> dict:
+    def get_user_permissions(db: Session, user_id: int, baby_id: int, family_id: int = None) -> dict:
         """ユーザーの特定の赤ちゃんに対するすべての記録タイプの権限を取得"""
+        
+        # 管理者チェック（family_idが提供されている場合）
+        if family_id:
+            fu = db.query(FamilyUser).filter(
+                FamilyUser.family_id == family_id,
+                FamilyUser.user_id == user_id
+            ).first()
+            if fu and fu.role == "admin":
+                return {k: True for k in ['feeding', 'sleep', 'diaper', 'growth', 'schedule', 'contraction', 'basic_info']}
+
         permissions = db.query(BabyPermission).filter(
             BabyPermission.user_id == user_id,
             BabyPermission.baby_id == baby_id
