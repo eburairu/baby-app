@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.5 (2026-02-12)
+
+### Bug Fixes
+
+- Set selected_baby_id cookie in all router responses to persist baby selection
+  ([`f407891`](https://github.com/eburairu/baby-app/commit/f407891628acaa8bf7cc80ab4024e7f996f6c9bd))
+
+
 ## v1.5.4 (2026-02-12)
 
 ### Bug Fixes
