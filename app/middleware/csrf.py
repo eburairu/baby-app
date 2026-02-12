@@ -18,7 +18,7 @@ class CSRFCookieMiddleware(BaseHTTPMiddleware):
             response.set_cookie(
                 key="csrf_token",
                 value=csrf_token,
-                httponly=True,
+                httponly=False,
                 samesite="lax",
                 secure=False  # Modify this based on environment if needed
             )

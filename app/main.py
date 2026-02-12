@@ -24,6 +24,27 @@ app = FastAPI(
 # CSRF Cookie Middleware
 app.add_middleware(CSRFCookieMiddleware)
 
+# CORS Middleware (for production frontend)
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Render環境変数や設定からオリジンを追加
+if settings.ENVIRONMENT == "production":
+    # 必要に応じてFrontendのURLを環境変数から取得して追加
+    pass
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # 開発中は一旦全許可、本番では制限推奨
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ===== エラーハンドラー =====
 
@@ -134,27 +155,26 @@ async def auth_required_handler(request: Request, exc: AuthenticationRequired):
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # ルーター登録
-app.include_router(family.router)
-app.include_router(baby.router)
-app.include_router(auth.router)
-app.include_router(dashboard.router)
-app.include_router(feeding.router)
-app.include_router(sleep.router)
-app.include_router(diaper.router)
-app.include_router(growth.router)
-app.include_router(contraction.router)
-app.include_router(schedule.router)
+# ルーター登録 (API)
+app.include_router(family.router, prefix="/api")
+app.include_router(baby.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(dashboard.router, prefix="/api")
+app.include_router(feeding.router, prefix="/api")
+app.include_router(sleep.router, prefix="/api")
+app.include_router(diaper.router, prefix="/api")
+app.include_router(growth.router, prefix="/api")
+app.include_router(contraction.router, prefix="/api")
+app.include_router(schedule.router, prefix="/api")
 
 
-@app.get("/")
-async def root(user: Optional[User] = Depends(get_current_user_optional)):
-    """ルートパス - 認証状態に応じてリダイレクト"""
-    if user:
-        return RedirectResponse(url="/dashboard")
-    return RedirectResponse(url="/login")
-
-
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     """ヘルスチェックエンドポイント"""
     return {"status": "healthy"}
+
+# Frontend Static Files (Must be last)
+import os
+frontend_path = "frontend/out"
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
