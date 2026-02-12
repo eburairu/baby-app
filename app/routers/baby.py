@@ -1,16 +1,15 @@
-"""赤ちゃん管理ルーター"""
-from fastapi import APIRouter, Depends, Form, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+"""赤ちゃん管理ルーター（JSON API専用）"""
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date
 from typing import List
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.baby import Baby
 from app.models.family import Family
 from app.dependencies import get_current_user, get_current_family, admin_required
 from app.services.permission_service import PermissionService
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/babies", tags=["baby"])
 
@@ -35,24 +34,31 @@ class BabiesListResponse(BaseModel):
     family_name: str
 
 
+class BabyCreateRequest(BaseModel):
+    """赤ちゃん作成リクエスト"""
+    name: str
+    birthday: date | None = None
+    due_date: date | None = None
+
+
+class BabyBornRequest(BaseModel):
+    """出生記録リクエスト"""
+    birthday: date
+
+
 # ===== JSON API エンドポイント =====
 
 @router.get("", response_model=BabiesListResponse)
 async def list_babies(
-    request: Request,
     db: Session = Depends(get_db),
     user = Depends(get_current_user),
     family: Family = Depends(get_current_family)
 ):
     """
-    赤ちゃん一覧を取得（JSON対応）
+    赤ちゃん一覧を取得（JSON専用）
 
     フロントエンドの赤ちゃんセレクター用
     """
-    # JSONリクエストのみ対応（HTMLは不要）
-    if not wants_json(request):
-        raise HTTPException(status_code=406, detail="JSON only endpoint")
-
     # 閲覧可能な赤ちゃんのみに絞り込む
     baby_ids = [b.id for b in family.babies]
     perms_map = PermissionService.get_user_permissions_batch(
@@ -67,74 +73,59 @@ async def list_babies(
     )
 
 
-# ===== HTML エンドポイント =====
+@router.post("", response_model=BabyResponse)
+async def create_baby(
+    baby_data: BabyCreateRequest,
+    db: Session = Depends(get_db),
+    family = Depends(get_current_family),
+    _ = Depends(admin_required)
+):
+    """赤ちゃんを登録（JSON専用）"""
+    baby = Baby(
+        family_id=family.id,
+        name=baby_data.name,
+        birthday=baby_data.birthday,
+        due_date=baby_data.due_date
+    )
+    db.add(baby)
+    db.commit()
+    db.refresh(baby)
+    return BabyResponse.model_validate(baby)
 
-@router.post("/{baby_id}/delete")
+
+@router.post("/{baby_id}/born", response_model=BabyResponse)
+async def baby_born(
+    baby_id: int,
+    born_data: BabyBornRequest,
+    db: Session = Depends(get_db),
+    family = Depends(get_current_family),
+    _ = Depends(admin_required)
+):
+    """赤ちゃんが生まれたことを記録（誕生日設定、JSON専用）"""
+    baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
+    if not baby:
+        raise HTTPException(status_code=404, detail="Baby not found")
+
+    baby.birthday = born_data.birthday
+    db.commit()
+    db.refresh(baby)
+
+    return BabyResponse.model_validate(baby)
+
+
+@router.delete("/{baby_id}", response_model=dict)
 async def delete_baby(
     baby_id: int,
     db: Session = Depends(get_db),
     family = Depends(get_current_family),
     _ = Depends(admin_required)
 ):
-    """赤ちゃんを削除"""
+    """赤ちゃんを削除（JSON専用）"""
     baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
     if not baby:
         raise HTTPException(status_code=404, detail="Baby not found")
-    
+
     db.delete(baby)
     db.commit()
-    
-    return RedirectResponse(url="/families/settings", status_code=303)
 
-
-@router.get("/new", response_class=HTMLResponse)
-async def new_baby_page(
-    request: Request,
-    user = Depends(get_current_user),
-    family = Depends(get_current_family)
-):
-    """赤ちゃん登録ページ"""
-    return templates.TemplateResponse(
-        "baby/form.html",
-        {"request": request, "family": family}
-    )
-
-
-@router.post("/create")
-async def create_baby(
-    name: str = Form(...),
-    birthday: date = Form(None),
-    due_date: date = Form(None),
-    db: Session = Depends(get_db),
-    family = Depends(get_current_family),
-    _ = Depends(admin_required)  # 管理者のみ可能
-):
-    """赤ちゃんを登録"""
-    baby = Baby(
-        family_id=family.id,
-        name=name,
-        birthday=birthday,
-        due_date=due_date
-    )
-    db.add(baby)
-    db.commit()
-    return RedirectResponse(url="/dashboard", status_code=303)
-
-
-@router.post("/{baby_id}/born")
-async def baby_born(
-    baby_id: int,
-    birthday: date = Form(...),
-    db: Session = Depends(get_db),
-    family = Depends(get_current_family),
-    _ = Depends(admin_required)
-):
-    """赤ちゃんが生まれたことを記録（誕生日設定）"""
-    baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
-    if not baby:
-        raise HTTPException(status_code=404, detail="Baby not found")
-    
-    baby.birthday = birthday
-    db.commit()
-    
-    return RedirectResponse(url="/dashboard", status_code=303)
+    return {"success": True, "message": "削除しました"}
