@@ -87,33 +87,82 @@ EOF
 2. **文字コードに注意**: `repr()` や `od -c` で正確な文字列を確認
 3. **インデントを保持**: Pythonはインデントが重要
 
+## 動作確認の方法
+
+**重要**: 実装後の動作確認は必ずDocker Composeで実施すること！
+
+### ✅ 正しい方法: Docker Composeで確認
+
+```bash
+# 1. すべてのサービス（DB + Web）をビルドして起動
+docker compose up --build
+
+# 2. ブラウザで http://localhost:8000 にアクセス
+
+# 3. ログ確認
+docker compose logs -f web
+
+# 4. 停止
+docker compose down
+```
+
+**Docker Composeを使う理由**:
+- クリーンな環境で動作確認できる
+- 依存関係のインストール問題を回避
+- マイグレーションが自動実行される
+- 本番環境に近い構成でテスト可能
+
+### ❌ 避けるべき方法: 仮想環境での確認
+
+```bash
+# これは避けるべき
+./venv/bin/uvicorn app.main:app --reload
+```
+
+**問題点**:
+- 依存関係がインストールされていない可能性
+- 環境依存の問題が発生しやすい
+- マイグレーションを手動実行する必要がある
+
 ## よくある問題と解決策
 
-### 問題1: `alembic: command not found`
+### 問題1: 依存関係のインストールエラー
+
+**症状**: `No module named 'uvicorn'` / `psycopg2のビルドエラー`
+
+**根本原因**: 仮想環境で動作確認しようとしている
+
+**解決策**: Docker Composeを使用する
+```bash
+docker compose up --build
+```
+
+### 問題2: `alembic: command not found`
 
 **原因**: 仮想環境が有効化されていないか、システムPythonを使用している
 
-**解決策**:
+**解決策**: Docker Composeを使用する（推奨）
+```bash
+docker compose up --build
+```
+
+または、仮想環境を使う場合:
 ```bash
 ./venv/bin/python -m alembic upgrade head
 ```
 
-### 問題2: `Field required [type=missing] - SYSTEM_INVITE_CODE`
+### 問題3: `Field required [type=missing] - SYSTEM_INVITE_CODE`
 
 **原因**: `.env`ファイルに`SYSTEM_INVITE_CODE`が設定されていない
 
-**解決策**:
+**解決策**: Docker Composeを使用する（環境変数が自動設定される）
 ```bash
-echo "SYSTEM_INVITE_CODE=dev-invite-code" >> .env
+docker compose up --build
 ```
 
-### 問題3: `No module named 'uvicorn'` / `No module named 'pytest'`
-
-**原因**: 仮想環境に依存関係がインストールされていない
-
-**解決策**:
+または、.envファイルを編集:
 ```bash
-./venv/bin/pip install -r requirements.txt
+echo "SYSTEM_INVITE_CODE=dev-invite-code" >> .env
 ```
 
 ### 問題4: PostgreSQL接続エラー
