@@ -106,6 +106,7 @@
         // ローディングオーバーレイ制御
         const loadingOverlay = document.getElementById('loading-overlay');
         let loadingRequestCount = 0;
+        const activeRequests = new Set();
 
         window.showLoading = function() {
             loadingRequestCount++;
@@ -115,7 +116,6 @@
         window.hideLoading = function() {
             loadingRequestCount = Math.max(0, loadingRequestCount - 1);
             if (loadingRequestCount === 0) {
-                // 少し遅延させて、早すぎる点滅を防ぐ
                 setTimeout(() => {
                     if (loadingRequestCount === 0) {
                         loadingOverlay.classList.remove('active');
@@ -124,28 +124,45 @@
             }
         };
 
+        // 除外判定関数
+        function isScrollOrPeriodic(elt) {
+            if (!elt || elt === document || elt === window) return false;
+            if (elt.hasAttribute && elt.hasAttribute('data-no-loading')) return true;
+            if (elt.closest && elt.closest('[data-no-loading]')) return true;
+            if (elt.getAttribute) {
+                const trigger = elt.getAttribute('hx-trigger');
+                if (trigger && trigger.includes('every')) return true;
+            }
+            return false;
+        }
+
         // HTMX リクエスト開始
-        document.body.addEventListener('htmx:configRequest', function(evt) {
-            // data-no-loading 属性がある要素からのリクエストは無視
-            if (evt.detail.elt && (evt.detail.elt.hasAttribute('data-no-loading') || evt.detail.elt.closest('[data-no-loading]'))) {
-                return;
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            if (isScrollOrPeriodic(evt.detail.elt)) return;
+            
+            // XHRを追跡対象に加える
+            if (evt.detail.xhr) {
+                activeRequests.add(evt.detail.xhr);
+                window.showLoading();
             }
-            window.showLoading();
         });
 
-        // HTMX リクエスト完了 (成功/失敗問わず)
+        // HTMX リクエスト完了
         document.body.addEventListener('htmx:afterRequest', function(evt) {
-            // data-no-loading 属性がある要素からのリクエストは無視
-            if (evt.detail.elt && (evt.detail.elt.hasAttribute('data-no-loading') || evt.detail.elt.closest('[data-no-loading]'))) {
-                return;
+            if (evt.detail.xhr && activeRequests.has(evt.detail.xhr)) {
+                activeRequests.delete(evt.detail.xhr);
+                window.hideLoading();
             }
-            window.hideLoading();
         });
 
-        // 通常のフォーム送信
+        // 通常のフォーム送信 (HTMX以外)
         document.addEventListener('submit', function(e) {
-            // target="_blank" や download 属性がある場合は表示しない
-            if (e.target.target === '_blank' || e.target.hasAttribute('download')) {
+            // HTMXが処理するリクエストは htmx:beforeRequest でハンドルされるためスキップ
+            // 多くのブラウザで HTMX は submit イベントを preventDefault する
+            if (e.defaultPrevented) return;
+            
+            // target="_blank" や download 属性、または除外属性がある場合は表示しない
+            if (e.target.target === '_blank' || e.target.hasAttribute('download') || isScrollOrPeriodic(e.target)) {
                 return;
             }
             
