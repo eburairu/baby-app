@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.0 (2026-02-12)
+
+### Features
+
+- Implement RBAC for baby information and record access control
+  ([`4ef6aa9`](https://github.com/eburairu/baby-app/commit/4ef6aa964a515adf6a18325acaa2ceae8e9ffda2))
+
+
 ## v1.6.0 (2026-02-12)
 
 ### Bug Fixes
