@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.1 (2026-02-12)
+
+### Bug Fixes
+
+- Add missing user dependency to get_current_baby
+  ([`9188d2a`](https://github.com/eburairu/baby-app/commit/9188d2a3cca24a15c88768a2708b1a56a853bd52))
+
+
 ## v1.7.0 (2026-02-12)
 
 ### Features
