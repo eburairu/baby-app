@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.1 (2026-02-12)
+
+### Bug Fixes
+
+- Correct UserSession import path in permission error handler
+  ([`6c1f621`](https://github.com/eburairu/baby-app/commit/6c1f62102bdccc88b9c6d7af17cda5565b19bb99))
+
+
 ## v1.9.0 (2026-02-12)
 
 ### Features
