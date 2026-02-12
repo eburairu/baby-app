@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.4 (2026-02-12)
+
+### Bug Fixes
+
+- Centralize Jinja2Templates and add now() to globals to fix schedule creation error
+  ([`9e26e01`](https://github.com/eburairu/baby-app/commit/9e26e01175afe074466d3a6cfd77f7eaf32b968d))
+
+
 ## v1.5.3 (2026-02-12)
 
 ### Bug Fixes
