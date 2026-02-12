@@ -60,27 +60,30 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. PostgreSQL起動:
-ローカルにPostgreSQLサーバーが必要です。Docker Composeを使う場合は以下:
+3. PostgreSQL起動 (Docker Compose推奨):
 ```bash
-docker compose -f docker-compose.test.yml up -d
+docker compose up -d
 ```
-※ ポート5433で起動しますが、`.env` の設定に合わせてください。
+※ ポート5434で起動します。ローカルでPostgreSQLが5432で動作している場合は競合を避けるため。
 
 4. 環境変数設定:
 ```bash
 cp .env.example .env
-# .envファイルを編集してPostgreSQL接続情報を設定
+# .envファイルを編集（通常はデフォルト設定でOK）
+# DATABASE_URL=postgresql://dev_user:dev_password@localhost:5434/baby_app_dev
+# SYSTEM_INVITE_CODE=dev-invite-code (必須)
 ```
 
-4. データベースマイグレーション:
+5. データベースマイグレーション:
 ```bash
-alembic upgrade head
+./venv/bin/python -m alembic upgrade head
+# または: venv/bin/alembic upgrade head
 ```
 
-5. 開発サーバー起動:
+6. 開発サーバー起動:
 ```bash
-uvicorn app.main:app --reload
+./venv/bin/uvicorn app.main:app --reload
+# または: venv/bin/uvicorn app.main:app --reload
 ```
 
 6. ブラウザで http://localhost:8000 にアクセス
@@ -96,8 +99,9 @@ docker compose -f docker-compose.test.yml up -d
 
 2. テスト実行:
 ```bash
-# conftest.py が自動的に localhost:5433 のDBを使用します
-pytest tests/ -v
+# conftest.py が自動的に localhost:5433 のPostgreSQLを使用します
+./venv/bin/pytest tests/ -v
+# または: venv/bin/pytest tests/ -v
 ```
 
 3. 終了後、停止:
