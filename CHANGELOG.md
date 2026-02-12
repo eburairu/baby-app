@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.12.1 (2026-02-12)
+
+### Bug Fixes
+
+- Complete Phase 9 - Convert all routers to JSON-only APIs
+  ([`8dabbb2`](https://github.com/eburairu/baby-app/commit/8dabbb21445e22a4939f891dc2ea2861d27de9a7))
+
+
 ## v1.12.0 (2026-02-12)
 
 ### Features
