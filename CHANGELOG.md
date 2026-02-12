@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.1 (2026-02-12)
+
+### Bug Fixes
+
+- Refine loading overlay logic to prevent unwanted spinners during periodic updates
+  ([`c3a6055`](https://github.com/eburairu/baby-app/commit/c3a605591b225c0ca44af8fb7dc39eccb6e50ce8))
+
+
 ## v1.4.0 (2026-02-12)
 
 
