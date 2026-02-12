@@ -1,5 +1,6 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
     <!-- 授乳統計 -->
+    {% if perms.feeding %}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
@@ -16,8 +17,10 @@
             <div class="text-5xl">🍼</div>
         </div>
     </div>
+    {% endif %}
 
     <!-- 睡眠統計 -->
+    {% if perms.sleep %}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
@@ -32,8 +35,10 @@
             <div class="text-5xl">😴</div>
         </div>
     </div>
+    {% endif %}
 
     <!-- おむつ統計 -->
+    {% if perms.diaper %}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
@@ -48,8 +53,10 @@
             <div class="text-5xl">🍀</div>
         </div>
     </div>
+    {% endif %}
 
     <!-- 成長統計 -->
+    {% if perms.growth %}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
         <div class="flex items-center justify-between">
             <div>
@@ -70,4 +77,5 @@
             <div class="text-5xl">📏</div>
         </div>
     </div>
+    {% endif %}
 </div>

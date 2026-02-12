@@ -7,7 +7,7 @@ from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.utils.templates import templates
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.models.user import User
 from app.models.baby import Baby
 from app.models.sleep import Sleep
@@ -21,7 +21,8 @@ async def list_sleeps(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠記録一覧ページ"""
     sleeps = db.query(Sleep).filter(
@@ -60,7 +61,8 @@ async def start_sleep(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠開始"""
     # 既に継続中の睡眠があるかチェック
@@ -109,7 +111,8 @@ async def end_sleep(
     sleep_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠終了"""
     sleep = db.query(Sleep).filter(
@@ -153,7 +156,8 @@ async def create_sleep(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: SleepCreate = Depends(SleepCreate.as_form)
+    form_data: SleepCreate = Depends(SleepCreate.as_form),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠記録作成（手動入力）"""
     new_sleep = Sleep(
@@ -199,7 +203,8 @@ async def edit_sleep_form(
     sleep_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠記録編集フォーム"""
     sleep = db.query(Sleep).filter(
@@ -228,7 +233,8 @@ async def update_sleep(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: SleepUpdate = Depends(SleepUpdate.as_form)
+    form_data: SleepUpdate = Depends(SleepUpdate.as_form),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠記録更新"""
     sleep = db.query(Sleep).filter(
@@ -279,7 +285,8 @@ async def delete_sleep(
     sleep_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("sleep"))
 ):
     """睡眠記録削除"""
     sleep = db.query(Sleep).filter(

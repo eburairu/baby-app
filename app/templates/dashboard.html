@@ -36,8 +36,10 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-yellow-700">
-                        赤ちゃんが登録されていません。
+                        赤ちゃんが登録されていません、または表示権限がありません。
+                        {% if user.families[0].role == 'admin' %}
                         <a href="/babies/new" class="font-medium underline hover:text-yellow-600">ここから登録してください。</a>
+                        {% endif %}
                     </p>
                 </div>
             </div>
@@ -53,7 +55,7 @@
     </div>
 
     <!-- プレママ専用エリア -->
-    {% if prenatal_info %}
+    {% if prenatal_info and perms.basic_info %}
     <div class="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900 dark:to-purple-900 rounded-xl shadow-md p-6 mb-8 border border-pink-200 dark:border-pink-800">
         <div class="text-center">
             <h2 class="text-3xl md:text-4xl font-extrabold text-pink-600 dark:text-pink-300 mb-2">
@@ -64,14 +66,20 @@
             </p>
             
             <div class="flex flex-col sm:flex-row justify-center gap-4">
+                {% if perms.contraction %}
                 <a href="/contractions" class="inline-flex justify-center items-center bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-200 transform hover:scale-105">
                     <span class="text-2xl mr-2">⏱️</span> 陣痛タイマー
                 </a>
+                {% endif %}
+                {% if user.families[0].role == 'admin' %}
                 <button onclick="document.getElementById('born-modal').showModal()" class="inline-flex justify-center items-center bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 px-8 rounded-full shadow-md border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 cursor-pointer">
                     👶 生まれました！
                 </button>
+                {% endif %}
             </div>
+            {% if user.families[0].role == 'admin' %}
             <p class="text-xs text-gray-500 mt-4">「生まれました！」を押すと誕生日を設定できます</p>
+            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -89,6 +97,7 @@
     <!-- 最新記録 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8">
         <!-- 最新授乳記録 -->
+        {% if perms.feeding %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 md:p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold">最新の授乳記録</h2>
@@ -114,8 +123,10 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
 
         <!-- 最新睡眠記録 -->
+        {% if perms.sleep %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold">最新の睡眠記録</h2>
@@ -130,7 +141,7 @@
                         {{ sleep.start_time.strftime('%m/%d %H:%M') }}
                     </p>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                        {% if sleep.is_ongoing %}
+                        {% if sleep.end_time == None %}
                         継続中
                         {% else %}
                         {{ sleep.duration_minutes }}分
@@ -142,8 +153,10 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
 
         <!-- 最新おむつ交換記録 -->
+        {% if perms.diaper %}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold">最新のおむつ交換</h2>
@@ -168,32 +181,55 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- クイックアクションボタン -->
     <div class="mt-6 md:mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-4 md:p-6">
         <h2 class="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">クイックアクション</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {% if perms.feeding %}
             <a href="/feedings?baby_id={{ baby.id }}"
                 class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">🍼</div>
                 <div class="font-semibold">授乳記録</div>
             </a>
+            {% endif %}
+            {% if perms.sleep %}
             <a href="/sleeps?baby_id={{ baby.id }}"
                 class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">😴</div>
                 <div class="font-semibold">睡眠記録</div>
             </a>
+            {% endif %}
+            {% if perms.diaper %}
             <a href="/diapers?baby_id={{ baby.id }}"
                 class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">🍀</div>
                 <div class="font-semibold">おむつ交換</div>
             </a>
+            {% endif %}
+            {% if perms.contraction %}
             <a href="/contractions?baby_id={{ baby.id }}"
                 class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
                 <div class="text-3xl md:text-4xl mb-1 md:mb-2">⏱️</div>
                 <div class="font-semibold">陣痛タイマー</div>
             </a>
+            {% endif %}
+            {% if perms.growth %}
+            <a href="/growths?baby_id={{ baby.id }}"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
+                <div class="text-3xl md:text-4xl mb-1 md:mb-2">📏</div>
+                <div class="font-semibold">成長記録</div>
+            </a>
+            {% endif %}
+            {% if perms.schedule %}
+            <a href="/schedules?baby_id={{ baby.id }}"
+                class="bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg p-4 text-center transition duration-200">
+                <div class="text-3xl md:text-4xl mb-1 md:mb-2">📅</div>
+                <div class="font-semibold">スケジュール</div>
+            </a>
+            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -205,7 +241,7 @@
             <p class="mb-4 text-gray-600 dark:text-gray-300 text-center">赤ちゃんが生まれた日を入力してください。</p>
             
             <form action="/babies/{{ baby.id }}/born" method="post" class="space-y-4">
-    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                 <div>
                     <label for="birthday-input" class="block text-sm font-medium mb-1">誕生日</label>
                     <input type="date" id="birthday-input" name="birthday" required
@@ -239,6 +275,5 @@
             }
         })();
     </script>
-    </div>
+</div>
 {% endblock %}
-        

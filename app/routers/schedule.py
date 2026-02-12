@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_baby
+from app.dependencies import get_current_user, get_current_baby, check_record_permission
 from app.utils.templates import templates
 from app.models.user import User
 from app.models.baby import Baby
@@ -20,7 +20,8 @@ async def list_schedules(
     request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール一覧ページ"""
     schedules = db.query(Schedule).filter(
@@ -32,37 +33,23 @@ async def list_schedules(
         {"request": request, "user": user, "baby": baby, "schedules": schedules}
     )
 
-
     # 選択された赤ちゃんIDをクッキーに保存
-
-
     response.set_cookie(
-
-
         key="selected_baby_id",
-
-
         value=str(baby.id),
-
-
         max_age=7 * 24 * 60 * 60,
-
-
         httponly=False,
-
-
         samesite="lax"
-
-
     )
-
-
     return response
+
+
 @router.get("/new", response_class=HTMLResponse)
 async def new_schedule_form(
     request: Request,
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """新規スケジュールフォーム"""
     return templates.TemplateResponse(
@@ -77,7 +64,8 @@ async def create_schedule(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: ScheduleCreate = Depends(ScheduleCreate.as_form)
+    form_data: ScheduleCreate = Depends(ScheduleCreate.as_form),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール作成"""
     new_schedule = Schedule(
@@ -112,7 +100,8 @@ async def toggle_schedule(
     schedule_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール完了/未完了切り替え"""
     schedule = db.query(Schedule).filter(
@@ -149,7 +138,8 @@ async def edit_schedule_form(
     schedule_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール編集フォーム"""
     schedule = db.query(Schedule).filter(
@@ -178,7 +168,8 @@ async def update_schedule(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     baby: Baby = Depends(get_current_baby),
-    form_data: ScheduleUpdate = Depends(ScheduleUpdate.as_form)
+    form_data: ScheduleUpdate = Depends(ScheduleUpdate.as_form),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール更新"""
     schedule = db.query(Schedule).filter(
@@ -218,7 +209,8 @@ async def delete_schedule(
     schedule_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
-    baby: Baby = Depends(get_current_baby)
+    baby: Baby = Depends(get_current_baby),
+    _ = Depends(check_record_permission("schedule"))
 ):
     """スケジュール削除"""
     schedule = db.query(Schedule).filter(

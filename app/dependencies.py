@@ -117,10 +117,35 @@ async def get_current_baby(
         baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
         if not baby:
             raise PermissionDenied("指定された赤ちゃんが見つかりません。")
+        
+        # 権限チェック (基本情報閲覧)
+        from app.services.permission_service import PermissionService
+        if not PermissionService.can_view_baby_record(db, user.id, family.id, baby.id, "basic_info"):
+            raise PermissionDenied("この赤ちゃんの情報を閲覧する権限がありません。")
+            
         return baby
 
-    # 指定がない場合は最初の赤ちゃんを返す
-    return family.babies[0]
+    # 指定がない場合は、権限のある最初の赤ちゃんを返す
+    from app.services.permission_service import PermissionService
+    for b in family.babies:
+        if PermissionService.can_view_baby_record(db, user.id, family.id, b.id, "basic_info"):
+            return b
+
+    raise PermissionDenied("閲覧可能な赤ちゃんが登録されていません。")
+
+
+def check_record_permission(record_type: str):
+    """特定の記録タイプに対する閲覧権限をチェックする依存性ファクトリ"""
+    async def _check(
+        db: Session = Depends(get_db),
+        user: User = Depends(get_current_user),
+        family: Family = Depends(get_current_family),
+        baby: Baby = Depends(get_current_baby),
+    ):
+        from app.services.permission_service import PermissionService
+        if not PermissionService.can_view_baby_record(db, user.id, family.id, baby.id, record_type):
+            raise PermissionDenied(f"この項目の閲覧権限がありません。")
+    return _check
 
 
 def admin_required(
