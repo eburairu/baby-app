@@ -65,6 +65,16 @@ async def family_settings(
 ):
     """家族設定画面（招待コードの確認など）"""
     is_admin = FamilyService.is_admin(db, user.id, family.id)
+    
+    # 閲覧可能な赤ちゃんのみを抽出
+    if is_admin:
+        display_babies = family.babies
+    else:
+        display_babies = [
+            b for b in family.babies 
+            if PermissionService.can_view_baby_record(db, user.id, family.id, b.id, "basic_info")
+        ]
+
     return templates.TemplateResponse(
         "family/settings.html",
         {
@@ -72,6 +82,7 @@ async def family_settings(
             "user": user,
             "family": family,
             "is_admin": is_admin,
+            "babies": display_babies,
             "members": family.members
         }
     )
@@ -116,13 +127,13 @@ async def member_permissions_page(
             "target_user": target_fu.user,
             "permissions_data": permissions_data,
             "record_types": {
+                "basic_info": "基本情報・表示",
                 "feeding": "授乳",
                 "sleep": "睡眠",
                 "diaper": "おむつ",
                 "growth": "成長記録",
                 "schedule": "スケジュール",
-                "contraction": "陣痛タイマー",
-                "basic_info": "基本情報"
+                "contraction": "陣痛タイマー"
             }
         }
     )

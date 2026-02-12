@@ -33,19 +33,19 @@ async def test_dashboard_access_with_permissions(client: AsyncClient, db: Sessio
 
     client.cookies.set("session_token", "test_token")
 
-    # 1. Default access (should be allowed)
+    # 1. Default access (should be DENIED now)
+    response = await client.get("/dashboard")
+    # 権限がない場合、get_current_baby が PermissionDenied を発生させ、
+    # main.py の例外ハンドラが /families/setup または適切な場所にリダイレクトする可能性があります。
+    # 既存のテストロジックに合わせて調整します。
+    assert "Test Baby" not in response.text
+
+    # 2. Grant basic_info (should allow viewing)
+    PermissionService.update_permissions(db, user.id, baby.id, {"basic_info": True})
+    
     response = await client.get("/dashboard")
     assert response.status_code == 200
     assert "Test Baby" in response.text
-
-    # 2. Restrict basic_info (should result in 403 or redirect due to PermissionDenied)
-    # Note: get_current_baby raises PermissionDenied if basic_info is restricted
-    PermissionService.update_permissions(db, user.id, baby.id, {"basic_info": False})
-    
-    response = await client.get("/dashboard")
-    # In app/main.py, PermissionDenied is handled and redirects to /families/settings
-    assert response.status_code == 200 # Redirect followed by client fixture
-    assert "/families/settings" in str(response.url)
 
     # 3. Restrict feeding but allow basic_info
     PermissionService.update_permissions(db, user.id, baby.id, {"basic_info": True, "feeding": False})

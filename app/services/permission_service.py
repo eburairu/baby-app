@@ -29,8 +29,8 @@ class PermissionService:
         if permission:
             return permission.can_view
 
-        # 3. 設定がない場合はデフォルト許可（ホワイトリスト方式）
-        return True
+        # 3. 設定がない場合はデフォルト拒否（ブラックリスト方式）
+        return False
 
     @staticmethod
     def get_user_permissions(db: Session, user_id: int, baby_id: int, family_id: int = None) -> dict:
@@ -50,15 +50,15 @@ class PermissionService:
             BabyPermission.baby_id == baby_id
         ).all()
         
-        # デフォルトはすべてTrue
+        # デフォルトはすべてFalse
         result = {
-            'feeding': True,
-            'sleep': True,
-            'diaper': True,
-            'growth': True,
-            'schedule': True,
-            'contraction': True,
-            'basic_info': True
+            'feeding': False,
+            'sleep': False,
+            'diaper': False,
+            'growth': False,
+            'schedule': False,
+            'contraction': False,
+            'basic_info': False
         }
         
         for p in permissions:
