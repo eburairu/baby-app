@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.utils.templates import templates
 from typing import Optional
 from app.models.user import User
 from app.models.family import Family

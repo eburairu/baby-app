@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from app.utils.templates import templates
 
 from fastapi.exceptions import RequestValidationError
 from app.config import settings

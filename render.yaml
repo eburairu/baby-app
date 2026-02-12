@@ -4,6 +4,10 @@ services:
     env: docker
     region: oregon
     plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # マイグレーション実行後にUvicornを起動
+    dockerCommand: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         sync: false  # Renderダッシュボードで手動設定（Neon接続文字列）
@@ -13,3 +17,5 @@ services:
         value: production
       - key: SYSTEM_INVITE_CODE
         sync: false  # Renderダッシュボードで手動設定
+      - key: PORT
+        value: "8000"

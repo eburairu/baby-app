@@ -2,10 +2,11 @@
 from fastapi import APIRouter, Depends, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.database import get_db
-from app.utils.templates import templates
 from app.models.user import User
+from app.models.family import Family
 from app.models.family_user import FamilyUser
 from app.dependencies import get_current_user, get_current_family, admin_required
 from app.services.family_service import FamilyService
@@ -13,6 +14,39 @@ from app.services.permission_service import PermissionService
 
 router = APIRouter(prefix="/families", tags=["family"])
 
+
+# ===== レスポンススキーマ =====
+
+class FamilyResponse(BaseModel):
+    """家族情報レスポンス"""
+    id: int
+    name: str
+    invite_code: str
+
+    class Config:
+        from_attributes = True
+
+
+# ===== JSON API エンドポイント =====
+
+@router.get("/me", response_model=FamilyResponse)
+async def get_my_family(
+    request: Request,
+    family: Family = Depends(get_current_family)
+):
+    """
+    現在の家族情報を取得（JSON対応）
+
+    フロントエンド用
+    """
+    # JSONリクエストのみ対応
+    if not wants_json(request):
+        raise HTTPException(status_code=406, detail="JSON only endpoint")
+
+    return FamilyResponse.model_validate(family)
+
+
+# ===== HTML エンドポイント =====
 
 @router.get("/setup", response_class=HTMLResponse)
 async def family_setup_page(
