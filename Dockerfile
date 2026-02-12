@@ -37,6 +37,6 @@ COPY --from=frontend-builder /app/frontend/out /app/frontend/out
 # Expose port (Render sets PORT env var, but good for local)
 EXPOSE 8000
 
-# Start command
-# Uses shell form to substitute environment variables if needed, specifically $PORT
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Start command with migrations
+# Uses shell form to run migrations first, then start the app
+CMD sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
