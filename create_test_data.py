@@ -8,6 +8,7 @@ from app.models.family_user import FamilyUser
 from app.models.baby import Baby
 from app.models.feeding import Feeding, FeedingType
 from app.services.auth_service import AuthService
+from app.utils.time import get_now_naive
 
 def create_test_data():
     db = SessionLocal()
@@ -49,7 +50,7 @@ def create_test_data():
         feeding = Feeding(
             baby_id=baby.id,
             user_id=user.id,
-            feeding_time=datetime.utcnow(),
+            feeding_time=get_now_naive(),
             feeding_type=FeedingType.BREAST,
             duration_minutes=15
         )

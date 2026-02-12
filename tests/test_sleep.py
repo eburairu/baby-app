@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from app.models.sleep import Sleep
 from app.dependencies import get_current_user, get_current_baby
 from app.main import app
+from app.utils.time import get_now_naive
 
 @pytest.mark.asyncio
 async def test_start_sleep_while_ongoing(client, db, test_user, test_baby):
@@ -12,7 +13,7 @@ async def test_start_sleep_while_ongoing(client, db, test_user, test_baby):
     ongoing_sleep = Sleep(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(hours=1),
+        start_time=get_now_naive() - timedelta(hours=1),
         end_time=None  # 継続中
     )
     db.add(ongoing_sleep)

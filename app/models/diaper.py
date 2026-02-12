@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 import enum
+from app.utils.time import get_now_naive
 
 from app.database import Base
 
@@ -21,7 +22,7 @@ class Diaper(Base):
     id = Column(Integer, primary_key=True, index=True)
     baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    change_time = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    change_time = Column(DateTime, default=get_now_naive, nullable=False, index=True)
     diaper_type = Column(SQLEnum(DiaperType), nullable=False)
     notes = Column(String, nullable=True)
 

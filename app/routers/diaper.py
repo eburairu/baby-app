@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_baby
@@ -46,7 +47,7 @@ async def quick_diaper(
     new_diaper = Diaper(
         baby_id=baby.id,
         user_id=user.id,
-        change_time=datetime.utcnow(),
+        change_time=get_now_naive(),
         diaper_type=DiaperType(diaper_type)
     )
 

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_baby
@@ -70,7 +71,7 @@ async def start_sleep(
     new_sleep = Sleep(
         baby_id=baby.id,
         user_id=user.id,
-        start_time=datetime.utcnow()
+        start_time=get_now_naive()
     )
 
     db.add(new_sleep)
@@ -117,7 +118,7 @@ async def end_sleep(
             detail="この睡眠は既に終了しています"
         )
 
-    sleep.end_time = datetime.utcnow()
+    sleep.end_time = get_now_naive()
     db.commit()
     db.refresh(sleep)
 

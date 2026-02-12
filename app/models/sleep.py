@@ -2,6 +2,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from app.utils.time import get_now_naive
 
 from app.database import Base
 
@@ -13,7 +14,7 @@ class Sleep(Base):
     id = Column(Integer, primary_key=True, index=True)
     baby_id = Column(Integer, ForeignKey("babies.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    start_time = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    start_time = Column(DateTime, default=get_now_naive, nullable=False, index=True)
     end_time = Column(DateTime, nullable=True)  # 継続中の場合はNull
     notes = Column(String, nullable=True)
 

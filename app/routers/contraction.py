@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from app.utils.time import get_now_naive
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_baby
@@ -78,7 +79,7 @@ async def start_contraction(
     new_contraction = Contraction(
         baby_id=baby.id,
         user_id=user.id,
-        start_time=datetime.utcnow(),
+        start_time=get_now_naive(),
         interval_seconds=interval_seconds
     )
 
@@ -130,7 +131,7 @@ async def end_contraction(
         )
 
     # 終了時刻と持続時間を設定
-    end_time = datetime.utcnow()
+    end_time = get_now_naive()
     contraction.end_time = end_time
     contraction.duration_seconds = ContractionService.calculate_duration(
         contraction.start_time,

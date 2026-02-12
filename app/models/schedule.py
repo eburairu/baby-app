@@ -2,6 +2,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
+from app.utils.time import get_now_naive
 
 from app.database import Base
 
@@ -17,7 +18,7 @@ class Schedule(Base):
     description = Column(String, nullable=True)
     scheduled_time = Column(DateTime, nullable=False, index=True)
     is_completed = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=get_now_naive, nullable=False)
 
     # リレーション
     baby = relationship("Baby", back_populates="schedules")

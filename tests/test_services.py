@@ -9,6 +9,7 @@ from app.models.sleep import Sleep
 from app.models.contraction import Contraction
 from app.services.statistics_service import StatisticsService
 from app.services.contraction_service import ContractionService
+from app.utils.time import get_now_naive
 
 
 def test_get_sleep_stats_including_ongoing(db, test_user, test_baby):
@@ -19,14 +20,14 @@ def test_get_sleep_stats_including_ongoing(db, test_user, test_baby):
     sleep1 = Sleep(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(hours=5),
-        end_time=datetime.utcnow() - timedelta(hours=3)
+        start_time=get_now_naive() - timedelta(hours=5),
+        end_time=get_now_naive() - timedelta(hours=3)
     )
     # 2. 継続中の睡眠 (現在まで3時間経過していると仮定)
     sleep2 = Sleep(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(hours=3),
+        start_time=get_now_naive() - timedelta(hours=3),
         end_time=None
     )
     db.add_all([sleep1, sleep2])
@@ -47,8 +48,8 @@ def test_get_contraction_stats_including_ongoing(db, test_user, test_baby):
     c1 = Contraction(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(minutes=30),
-        end_time=datetime.utcnow() - timedelta(minutes=29),
+        start_time=get_now_naive() - timedelta(minutes=30),
+        end_time=get_now_naive() - timedelta(minutes=29),
         duration_seconds=60,
         interval_seconds=600
     )
@@ -56,7 +57,7 @@ def test_get_contraction_stats_including_ongoing(db, test_user, test_baby):
     c2 = Contraction(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(minutes=5),
+        start_time=get_now_naive() - timedelta(minutes=5),
         end_time=None
     )
     db.add_all([c1, c2])
@@ -87,15 +88,15 @@ def test_get_sleep_stats_boundary(db, test_user, test_baby):
     sleep_old = Sleep(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(days=8),
-        end_time=datetime.utcnow() - timedelta(days=7, hours=22)
+        start_time=get_now_naive() - timedelta(days=8),
+        end_time=get_now_naive() - timedelta(days=7, hours=22)
     )
     # 6日前の記録 (期間内)
     sleep_new = Sleep(
         baby_id=test_baby.id,
         user_id=test_user.id,
-        start_time=datetime.utcnow() - timedelta(days=6),
-        end_time=datetime.utcnow() - timedelta(days=6, hours=-2) # 2時間
+        start_time=get_now_naive() - timedelta(days=6),
+        end_time=get_now_naive() - timedelta(days=6, hours=-2) # 2時間
     )
     db.add_all([sleep_old, sleep_new])
     db.commit()
