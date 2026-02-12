@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.12.0 (2026-02-12)
+
+### Features
+
+- Complete htmx to Next.js migration (Phase 9 & 10)
+  ([`b387599`](https://github.com/eburairu/baby-app/commit/b3875994c081c7a15dfce442d8895eab51a5dbdf))
+
+
 ## v1.11.0 (2026-02-12)
 
 ### Features
