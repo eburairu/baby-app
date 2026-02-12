@@ -1,6 +1,6 @@
 """認証ルーター"""
 import secrets
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 

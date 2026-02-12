@@ -39,7 +39,7 @@ async def contraction_timer(
     # 直近1時間の統計
     stats = ContractionService.get_statistics(db, baby.id, hours=1)
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "contraction/timer.html",
         {
             "request": request,
@@ -52,6 +52,31 @@ async def contraction_timer(
     )
 
 
+    # 選択された赤ちゃんIDをクッキーに保存
+
+
+    response.set_cookie(
+
+
+        key="selected_baby_id",
+
+
+        value=str(baby.id),
+
+
+        max_age=7 * 24 * 60 * 60,
+
+
+        httponly=False,
+
+
+        samesite="lax"
+
+
+    )
+
+
+    return response
 @router.post("/start", response_class=HTMLResponse)
 async def start_contraction(
     request: Request,
