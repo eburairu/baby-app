@@ -48,7 +48,7 @@ def _create_session(db: Session, user_id: int) -> str:
 
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(
+def login_page(
     request: Request,
     user: User | None = Depends(get_current_user_optional),
 ):
@@ -62,7 +62,7 @@ async def login_page(
 
 
 @router.post("/login")
-async def login(
+def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
@@ -91,7 +91,7 @@ async def login(
 
 
 @router.get("/register", response_class=HTMLResponse)
-async def register_page(
+def register_page(
     request: Request,
     user: User | None = Depends(get_current_user_optional),
     code: Optional[str] = None,
@@ -106,7 +106,7 @@ async def register_page(
 
 
 @router.post("/register")
-async def register(
+def register(
     request: Request,
     username: str = Form(..., min_length=3, max_length=50),
     password: str = Form(..., min_length=6, max_length=72),
@@ -173,7 +173,7 @@ async def register(
 
 
 @router.get("/logout")
-async def logout(
+def logout(
     request: Request,
     session_token: str | None = None,
     db: Session = Depends(get_db),

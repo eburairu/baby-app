@@ -26,7 +26,7 @@ class PermissionDenied(Exception):
     pass
 
 
-async def get_current_user(
+def get_current_user(
     request: Request,
     session_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
@@ -62,7 +62,7 @@ async def get_current_user(
     return user
 
 
-async def get_current_family(
+def get_current_family(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> Family:
@@ -76,7 +76,7 @@ async def get_current_family(
     return user.families[0].family
 
 
-async def get_current_baby(
+def get_current_baby(
     family: Family = Depends(get_current_family),
     baby_id: Optional[int] = None,  # URLクエリやパラメータから
     db: Session = Depends(get_db)
@@ -110,7 +110,7 @@ def admin_required(
     return fu
 
 
-async def get_current_user_optional(
+def get_current_user_optional(
     session_token: Optional[str] = Cookie(None),
     db: Session = Depends(get_db)
 ) -> Optional[User]:
