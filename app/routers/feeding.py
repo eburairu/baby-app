@@ -38,7 +38,8 @@ async def list_feedings(
 @router.get("/new", response_class=HTMLResponse)
 async def new_feeding_form(
     request: Request,
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    baby: Baby = Depends(get_current_baby)
 ):
     """新規授乳記録フォーム"""
     return templates.TemplateResponse(
@@ -46,6 +47,7 @@ async def new_feeding_form(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "feeding": None,
             "feeding_types": FeedingType
         }

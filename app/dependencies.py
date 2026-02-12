@@ -2,7 +2,7 @@
 import secrets
 from datetime import datetime
 from typing import Optional
-from fastapi import Cookie, Depends, Request, Response, HTTPException, status
+from fastapi import Cookie, Depends, Request, Response, HTTPException, status, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -76,21 +76,38 @@ def get_current_family(
     return user.families[0].family
 
 
-def get_current_baby(
+async def get_current_baby(
+    request: Request,
     family: Family = Depends(get_current_family),
-    baby_id: Optional[int] = None,  # URLクエリやパラメータから
+    baby_id: Optional[int] = Query(None),  # URLクエリパラメータ
     db: Session = Depends(get_db)
 ) -> Baby:
-    """現在操作対象の赤ちゃんを取得"""
+    """現在操作対象の赤ちゃんを取得
+
+    URLクエリパラメータまたはPOSTフォームデータから baby_id を取得します。
+    指定がない場合は、家族の最初の赤ちゃんを返します。
+    """
     if not family.babies:
         raise PermissionDenied("赤ちゃんが登録されていません。")
-    
+
+    # まずURLクエリパラメータから取得
+    if not baby_id:
+        # POSTリクエストの場合、フォームデータから取得を試みる
+        if request.method == "POST":
+            try:
+                form = await request.form()
+                baby_id_str = form.get("baby_id")
+                if baby_id_str:
+                    baby_id = int(baby_id_str)
+            except Exception:
+                pass
+
     if baby_id:
         baby = db.query(Baby).filter(Baby.id == baby_id, Baby.family_id == family.id).first()
         if not baby:
             raise PermissionDenied("指定された赤ちゃんが見つかりません。")
         return baby
-    
+
     # 指定がない場合は最初の赤ちゃんを返す
     return family.babies[0]
 

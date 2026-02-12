@@ -8,6 +8,7 @@
         class="space-y-4"
     >
     <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <input type="hidden" name="baby_id" value="{{ baby.id }}">
         <div>
             <label for="start_time" class="block text-sm font-medium mb-2">
                 開始時間
