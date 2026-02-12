@@ -78,6 +78,7 @@ def get_current_family(
 
 async def get_current_baby(
     request: Request,
+    user: User = Depends(get_current_user),
     family: Family = Depends(get_current_family),
     baby_id: Optional[int] = Query(None),  # URLクエリパラメータ
     selected_baby_id: Optional[str] = Cookie(None),  # クッキーから選択中の赤ちゃんID
