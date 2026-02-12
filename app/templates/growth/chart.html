@@ -28,7 +28,7 @@
                             <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
                                 <div
                                     class="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2"
-                                    style="width: {{ (growth.weight_kg / 15 * 100) | min(100) }}%"
+                                    style="width: {{ [growth.weight_kg / 15 * 100, 100] | min }}%"
                                 >
                                     <span class="text-xs text-white font-semibold">{{ growth.weight_kg }} kg</span>
                                 </div>
@@ -52,7 +52,7 @@
                             <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
                                 <div
                                     class="bg-green-600 h-6 rounded-full flex items-center justify-end pr-2"
-                                    style="width: {{ (growth.height_cm / 100 * 100) | min(100) }}%"
+                                    style="width: {{ [growth.height_cm / 100 * 100, 100] | min }}%"
                                 >
                                     <span class="text-xs text-white font-semibold">{{ growth.height_cm }} cm</span>
                                 </div>
@@ -76,7 +76,7 @@
                             <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative">
                                 <div
                                     class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2"
-                                    style="width: {{ (growth.head_circumference_cm / 50 * 100) | min(100) }}%"
+                                    style="width: {{ [growth.head_circumference_cm / 50 * 100, 100] | min }}%"
                                 >
                                     <span class="text-xs text-white font-semibold">{{ growth.head_circumference_cm }} cm</span>
                                 </div>
