@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """アプリケーション設定"""
     DATABASE_URL: str
     SECRET_KEY: str
-    SYSTEM_INVITE_CODE: str
+    SYSTEM_INVITE_CODE: str = "default-invite-code"
     ENVIRONMENT: str = "development"
     TIMEZONE: str = "Asia/Tokyo"
 
