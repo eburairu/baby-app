@@ -85,8 +85,9 @@ async def create_feeding(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "feedings": db.query(Feeding).filter(
-                Feeding.user_id == user.id
+                Feeding.baby_id == baby.id
             ).order_by(Feeding.feeding_time.desc()).limit(50).all()
         }
     )
@@ -157,8 +158,9 @@ async def update_feeding(
         {
             "request": request,
             "user": user,
+            "baby": baby,
             "feedings": db.query(Feeding).filter(
-                Feeding.user_id == user.id
+                Feeding.baby_id == baby.id
             ).order_by(Feeding.feeding_time.desc()).limit(50).all()
         }
     )
