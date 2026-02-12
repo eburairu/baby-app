@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.12.3 (2026-02-12)
+
+### Bug Fixes
+
+- Fix dashboard not loading when no baby selected on first visit
+  ([`cd49fd7`](https://github.com/eburairu/baby-app/commit/cd49fd7fc4f02f7ec82bc69b7b8afe70965104e3))
+
+
 ## v1.12.2 (2026-02-12)
 
 
