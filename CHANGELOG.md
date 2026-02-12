@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.8.1 (2026-02-12)
+
+### Bug Fixes
+
+- Correctly handle underscore in permission keys during update
+  ([`9977e34`](https://github.com/eburairu/baby-app/commit/9977e3436ad90067defada137720815ef7a63001))
+
+### Testing
+
+- Add unit tests for statistics and contraction services
+  ([`e024169`](https://github.com/eburairu/baby-app/commit/e0241691d76775081f24131f2b12f50d0584e9a1))
+
+
 ## v1.8.0 (2026-02-12)
 
 ### Features
