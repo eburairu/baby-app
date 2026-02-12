@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.6.0 (2026-02-12)
+
+### Bug Fixes
+
+- **growth**: Correct Jinja2 min filter usage in growth chart template to prevent Internal Server
+  Error
+  ([`2059d51`](https://github.com/eburairu/baby-app/commit/2059d518e16df22d9143f97e026451d383b499f8))
+
+### Features
+
+- Display selected baby name badge on all main pages
+  ([`cfc4461`](https://github.com/eburairu/baby-app/commit/cfc44617ca1924f3ef17441dcc5aa1f3caf725ad))
+
+
 ## v1.5.5 (2026-02-12)
 
 ### Bug Fixes
