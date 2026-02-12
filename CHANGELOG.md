@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.5.3 (2026-02-12)
+
+### Bug Fixes
+
+- Add cookie support to get_current_baby for consistent baby selection across all pages
+  ([`dc98c16`](https://github.com/eburairu/baby-app/commit/dc98c16f7f0d25f68dab2a2b7e1ea82e1dcc3d80))
+
+
 ## v1.5.2 (2026-02-12)
 
 ### Bug Fixes
