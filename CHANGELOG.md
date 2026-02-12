@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.10.0 (2026-02-12)
+
+### Features
+
+- Next.jsフロントエンドを実装し、認証機能とマルチステージDockerビルドに統合。
+  ([`8967fb4`](https://github.com/eburairu/baby-app/commit/8967fb44845d07ed674943cc2e7a7c6e9139b217))
+
+
 ## v1.9.1 (2026-02-12)
 
 ### Bug Fixes
