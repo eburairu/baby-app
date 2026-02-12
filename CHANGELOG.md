@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.11.0 (2026-02-12)
+
+### Features
+
+- Implement initial application landing page with login/register links and remove unused Python
+  version configuration files.
+  ([`c7b56a3`](https://github.com/eburairu/baby-app/commit/c7b56a30d3089401bf5c02d05755c027cc584f46))
+
+
 ## v1.10.0 (2026-02-12)
 
 ### Features
