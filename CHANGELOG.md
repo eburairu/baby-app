@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.9.0 (2026-02-12)
+
+### Features
+
+- Add global baby selector and improve permission error handling
+  ([`f467fb4`](https://github.com/eburairu/baby-app/commit/f467fb44e76a7f52c1d157a35c759a932fd48717))
+
+
 ## v1.8.3 (2026-02-12)
 
 ### Bug Fixes
