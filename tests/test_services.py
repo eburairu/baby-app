@@ -6,6 +6,8 @@ TEST_DATABASE_URL 環境変数でPostgreSQLも使用可能。
 from datetime import datetime, timedelta
 
 from app.models.sleep import Sleep
+from app.models.feeding import Feeding, FeedingType
+from app.models.diaper import Diaper, DiaperType
 from app.models.contraction import Contraction
 from app.services.statistics_service import StatisticsService
 from app.services.contraction_service import ContractionService
@@ -113,3 +115,98 @@ def test_get_contraction_stats_empty(db, test_baby):
     stats = ContractionService.get_statistics(db, test_baby.id)
     assert stats["count"] == 0
     assert stats["avg_duration_seconds"] == 0
+
+
+def test_get_feeding_stats_optimized(db, test_user, test_baby):
+    """
+    授乳統計のSQL最適化版が正しく動作するかテスト
+    """
+    # 複数の授乳記録を作成
+    feeding1 = Feeding(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        feeding_time=get_now_naive() - timedelta(hours=2),
+        feeding_type=FeedingType.BREAST,
+        amount_ml=100
+    )
+    feeding2 = Feeding(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        feeding_time=get_now_naive() - timedelta(hours=4),
+        feeding_type=FeedingType.BOTTLE,
+        amount_ml=150
+    )
+    feeding3 = Feeding(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        feeding_time=get_now_naive() - timedelta(hours=6),
+        feeding_type=FeedingType.BOTTLE,
+        amount_ml=200
+    )
+    db.add_all([feeding1, feeding2, feeding3])
+    db.commit()
+
+    stats = StatisticsService.get_feeding_stats(db, test_baby.id)
+
+    assert stats["count"] == 3
+    assert stats["avg_amount_ml"] == 150.0  # (100 + 150 + 200) / 3
+
+
+def test_get_recent_records_selective(db, test_user, test_baby):
+    """
+    最新記録の選択的取得が正しく動作するかテスト
+    """
+    # データを作成
+    feeding = Feeding(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        feeding_time=get_now_naive(),
+        feeding_type=FeedingType.BREAST
+    )
+    sleep = Sleep(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        start_time=get_now_naive() - timedelta(hours=2),
+        end_time=get_now_naive() - timedelta(hours=1)
+    )
+    diaper = Diaper(
+        baby_id=test_baby.id,
+        user_id=test_user.id,
+        change_time=get_now_naive() - timedelta(hours=3),
+        diaper_type=DiaperType.WET
+    )
+    db.add_all([feeding, sleep, diaper])
+    db.commit()
+
+    # 全て取得
+    result_all = StatisticsService.get_recent_records_selective(
+        db, test_baby.id,
+        include_feeding=True,
+        include_sleep=True,
+        include_diaper=True
+    )
+    assert len(result_all["feedings"]) == 1
+    assert len(result_all["sleeps"]) == 1
+    assert len(result_all["diapers"]) == 1
+
+    # 授乳のみ取得
+    result_feeding_only = StatisticsService.get_recent_records_selective(
+        db, test_baby.id,
+        include_feeding=True,
+        include_sleep=False,
+        include_diaper=False
+    )
+    assert len(result_feeding_only["feedings"]) == 1
+    assert len(result_feeding_only["sleeps"]) == 0
+    assert len(result_feeding_only["diapers"]) == 0
+
+    # 何も取得しない
+    result_none = StatisticsService.get_recent_records_selective(
+        db, test_baby.id,
+        include_feeding=False,
+        include_sleep=False,
+        include_diaper=False
+    )
+    assert len(result_none["feedings"]) == 0
+    assert len(result_none["sleeps"]) == 0
+    assert len(result_none["diapers"]) == 0

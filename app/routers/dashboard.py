@@ -25,11 +25,12 @@ def dashboard(
     baby: Baby = Depends(get_current_baby)
 ):
     """ダッシュボードページ"""
-    # 閲覧可能な赤ちゃんのみに絞り込む
-    visible_babies = [
-        b for b in family.babies 
-        if PermissionService.can_view_baby_record(db, user.id, family.id, b.id, "basic_info")
-    ]
+    # 閲覧可能な赤ちゃんのみに絞り込む（バッチ取得で最適化）
+    baby_ids = [b.id for b in family.babies]
+    perms_map = PermissionService.get_user_permissions_batch(
+        db, user.id, baby_ids, family.id, "basic_info"
+    )
+    visible_babies = [b for b in family.babies if perms_map.get(b.id, False)]
     
     # 現在の赤ちゃんの権限を取得
     perms = PermissionService.get_user_permissions(db, user.id, baby.id, family.id)
@@ -40,13 +41,15 @@ def dashboard(
     diaper_stats = StatisticsService.get_diaper_stats(db, baby.id) if perms['diaper'] else None
     latest_growth = StatisticsService.get_latest_growth(db, baby.id) if perms['growth'] else None
     
+    # 最新記録を権限に基づいて選択的に取得（パフォーマンス最適化）
     recent_records = None
     if perms['feeding'] or perms['sleep'] or perms['diaper']:
-        recent_records = StatisticsService.get_recent_records(db, baby.id)
-        # 権限がない項目を除去
-        if not perms['feeding']: recent_records['feedings'] = []
-        if not perms['sleep']: recent_records['sleeps'] = []
-        if not perms['diaper']: recent_records['diapers'] = []
+        recent_records = StatisticsService.get_recent_records_selective(
+            db, baby.id,
+            include_feeding=perms['feeding'],
+            include_sleep=perms['sleep'],
+            include_diaper=perms['diaper']
+        )
 
     # プレママ期情報
     prenatal_info = None
